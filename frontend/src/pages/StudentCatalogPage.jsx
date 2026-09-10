@@ -5,6 +5,7 @@ import BookDetailModal from '../components/BookDetailModal';
 import ReservationSuccessModal from '../components/ReservationSuccessModal';
 import BookSearchBar from '../components/BookSearchBar';
 import { useNotifications } from '../context/NotificationContext';
+import { useToast } from '../context/ToastContext';
 
 export default function StudentCatalogPage() {
   const [books, setBooks] = useState([]);
@@ -15,6 +16,7 @@ export default function StudentCatalogPage() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const { addNotification } = useNotifications();
+  const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
     const res = await api.get('/books');
@@ -51,19 +53,21 @@ export default function StudentCatalogPage() {
       setSelectedBook(null);
       setReservationResult(res.data.record);
       addNotification(`You have successfully reserved "${res.data.record.book_title}".`);
+      showSuccess('Book reserved successfully');
       loadBooks();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to reserve book');
+      const message = err.response?.data?.message || 'Failed to reserve book';
+      setFormError(message);
+      showError(message);
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="page">
+    <div className="page catalog-page">
       <div className="page-header">
         <h1>Book References Catalog</h1>
-        <p className="page-subtitle">Browse the library collection and reserve a copy for pickup.</p>
       </div>
 
       <BookSearchBar
@@ -74,18 +78,20 @@ export default function StudentCatalogPage() {
         categories={categories}
       />
 
-      <div className="catalog-grid">
-        {filteredBooks.map((book) => (
-          <BookCatalogCard
-            key={book.id}
-            book={book}
-            onOpen={(b) => {
-              setFormError('');
-              setSelectedBook(b);
-            }}
-          />
-        ))}
-        {filteredBooks.length === 0 && <p className="empty-state">No books match your search.</p>}
+      <div className="catalog-scroll-area">
+        <div className="catalog-grid">
+          {filteredBooks.map((book) => (
+            <BookCatalogCard
+              key={book.id}
+              book={book}
+              onOpen={(b) => {
+                setFormError('');
+                setSelectedBook(b);
+              }}
+            />
+          ))}
+          {filteredBooks.length === 0 && <p className="empty-state">No books match your search.</p>}
+        </div>
       </div>
 
       {selectedBook && (

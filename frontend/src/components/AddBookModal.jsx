@@ -10,6 +10,7 @@ const emptyBook = {
   publisher: '',
   publishedDate: '',
   description: '',
+  coverUrl: '',
   totalCopies: 1,
 };
 
@@ -65,6 +66,15 @@ export default function AddBookModal({ onClose, onSubmit, submitting, error }) {
               <input type="date" value={form.publishedDate} onChange={update('publishedDate')} />
             </label>
           </div>
+          <label>
+            Cover Image URL
+            <input
+              type="url"
+              placeholder="https://covers.openlibrary.org/b/isbn/XXXXXXXXXX-L.jpg"
+              value={form.coverUrl}
+              onChange={update('coverUrl')}
+            />
+          </label>
           <label>
             Total Copies
             <input type="number" min="1" value={form.totalCopies} onChange={update('totalCopies')} required />

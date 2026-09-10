@@ -1,46 +1,54 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import api from '../api/axios';
 import { useAuth } from './AuthContext';
 
 const NotificationContext = createContext(null);
 
-function storageKey(userId) {
-  return `notifications_${userId}`;
-}
+const POLL_INTERVAL_MS = 20000;
 
 export function NotificationProvider({ children }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
 
-  useEffect(() => {
+  const loadNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
       return;
     }
     try {
-      const stored = JSON.parse(localStorage.getItem(storageKey(user.id)) || '[]');
-      setNotifications(stored);
+      const res = await api.get('/notifications/mine');
+      setNotifications(res.data.notifications);
     } catch {
       setNotifications([]);
     }
   }, [user]);
 
-  function persist(next) {
-    setNotifications(next);
-    if (user) {
-      localStorage.setItem(storageKey(user.id), JSON.stringify(next));
+  useEffect(() => {
+    loadNotifications();
+    if (!user) return undefined;
+    const interval = setInterval(loadNotifications, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [user, loadNotifications]);
+
+  async function addNotification(message) {
+    try {
+      const res = await api.post('/notifications', { message });
+      setNotifications((prev) => [res.data.notification, ...prev]);
+    } catch {
+      // Best-effort: the notification is a nice-to-have, not critical to the action.
     }
   }
 
-  function addNotification(message) {
-    const entry = { id: Date.now(), message, createdAt: new Date().toISOString(), read: false };
-    persist([entry, ...notifications].slice(0, 20));
+  async function markAllRead() {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
+    try {
+      await api.patch('/notifications/mark-read');
+    } catch {
+      // Best-effort; a future load will reconcile the read state.
+    }
   }
 
-  function markAllRead() {
-    persist(notifications.map((n) => ({ ...n, read: true })));
-  }
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
     <NotificationContext.Provider value={{ notifications, addNotification, markAllRead, unreadCount }}>

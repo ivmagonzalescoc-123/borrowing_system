@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import BorrowRecordRow from '../components/BorrowRecordRow';
+import { useToast } from '../context/ToastContext';
 
 export default function StaffBorrowedPage() {
   const [records, setRecords] = useState([]);
+  const { showSuccess, showError } = useToast();
 
   async function loadData() {
     const res = await api.get('/borrows');
@@ -15,8 +17,13 @@ export default function StaffBorrowedPage() {
   }, []);
 
   async function handleMarkReturned(id) {
-    await api.patch(`/borrows/${id}/return`);
-    loadData();
+    try {
+      await api.patch(`/borrows/${id}/return`);
+      showSuccess('Book marked as returned');
+      loadData();
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to mark book as returned');
+    }
   }
 
   const borrowed = records.filter((r) => r.status === 'borrowed' || r.status === 'returned');

@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import AuthWaveHero from '../components/AuthWaveHero';
+import ForgotPasswordModal from '../components/ForgotPasswordModal';
+import GoogleLoginModal from '../components/GoogleLoginModal';
 
 function GoogleIcon() {
   return (
@@ -33,9 +36,10 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
-  const [googleNotice, setGoogleNotice] = useState('');
-  const [forgotNotice, setForgotNotice] = useState('');
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const { login } = useAuth();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -50,19 +54,22 @@ export default function LoginPage() {
 
     try {
       const user = await login(email, password);
+      showSuccess('Login successful');
       navigate(user.role === 'staff' ? '/staff' : '/student');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const message = err.response?.data?.message || 'Login failed';
+      setError(message);
+      showError(message);
     }
   }
 
   function handleGoogleLogin() {
-    setGoogleNotice('Google sign-in isn’t configured for this demo yet.');
+    setShowGoogleModal(true);
   }
 
   function handleForgotPassword(e) {
     e.preventDefault();
-    setForgotNotice('Password reset isn’t available in this demo yet.');
+    setShowForgotModal(true);
   }
 
   return (
@@ -80,6 +87,7 @@ export default function LoginPage() {
             <input
               id="email"
               type="email"
+              autoComplete="off"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => {
@@ -98,6 +106,7 @@ export default function LoginPage() {
             <input
               id="password"
               type={showPassword ? 'text' : 'password'}
+              autoComplete="off"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => {
@@ -120,7 +129,6 @@ export default function LoginPage() {
         <a href="#" className="forgot-password-link" onClick={handleForgotPassword}>
           Forgot Password?
         </a>
-        {forgotNotice && <p className="auth-notice">{forgotNotice}</p>}
 
         <button type="submit" className="btn-primary">
           Login
@@ -134,9 +142,11 @@ export default function LoginPage() {
           <GoogleIcon />
           Continue with Google
         </button>
-        {googleNotice && <p className="auth-notice">{googleNotice}</p>}
       </form>
       </div>
+
+      {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
+      {showGoogleModal && <GoogleLoginModal onClose={() => setShowGoogleModal(false)} />}
     </div>
   );
 }

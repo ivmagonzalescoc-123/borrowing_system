@@ -28,6 +28,10 @@ const UserModel = {
     return this.findById(result.insertId);
   },
 
+  async updatePassword(id, passwordHash) {
+    await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, id]);
+  },
+
   async findAllStudents() {
     const [rows] = await db.query(
       "SELECT id, id_number, full_name, email, course, created_at FROM users WHERE role = 'student' ORDER BY full_name"

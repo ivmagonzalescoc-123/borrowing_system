@@ -21,7 +21,7 @@ async function getBook(req, res, next) {
 
 async function createBook(req, res, next) {
   try {
-    const { title, author, isbn, category, publisher, publishedDate, description, totalCopies } = req.body;
+    const { title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies } = req.body;
     if (!title || !author || !totalCopies) {
       return res.status(400).json({ message: 'title, author and totalCopies are required' });
     }
@@ -33,6 +33,7 @@ async function createBook(req, res, next) {
       publisher,
       publishedDate,
       description,
+      coverUrl,
       totalCopies,
     });
     res.status(201).json({ book });
@@ -46,7 +47,7 @@ async function updateBook(req, res, next) {
     const existing = await BookModel.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: 'Book not found' });
 
-    const { title, author, isbn, category, publisher, publishedDate, description, totalCopies } = req.body;
+    const { title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies } = req.body;
     const book = await BookModel.update(req.params.id, {
       title: title ?? existing.title,
       author: author ?? existing.author,
@@ -55,6 +56,7 @@ async function updateBook(req, res, next) {
       publisher: publisher ?? existing.publisher,
       publishedDate: publishedDate ?? existing.published_date,
       description: description ?? existing.description,
+      coverUrl: coverUrl ?? existing.cover_url,
       totalCopies: totalCopies ?? existing.total_copies,
     });
     res.json({ book });

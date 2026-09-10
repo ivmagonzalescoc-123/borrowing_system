@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const UserModel = require('../models/user.model');
 const { signToken } = require('../utils/jwt');
@@ -5,6 +6,15 @@ const { signToken } = require('../utils/jwt');
 function sanitizeUser(user) {
   const { password_hash, ...safe } = user;
   return safe;
+}
+
+// No SMTP is configured for this demo, so OTPs live in memory and are handed
+// straight back to the caller instead of being emailed.
+const otpStore = new Map(); // email -> { otp, expiresAt }
+const OTP_TTL_MS = 5 * 60 * 1000;
+
+function generateOtp() {
+  return crypto.randomInt(100000, 999999).toString();
 }
 
 async function register(req, res, next) {
@@ -75,4 +85,54 @@ async function me(req, res, next) {
   }
 }
 
-module.exports = { register, login, me };
+async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const user = await UserModel.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: 'No account found with that email' });
+    }
+
+    const otp = generateOtp();
+    otpStore.set(email, { otp, expiresAt: Date.now() + OTP_TTL_MS });
+
+    // Demo mode: no SMTP configured, so the OTP is returned directly so the
+    // frontend can auto-fill it instead of it being emailed.
+    res.json({ message: 'OTP generated', otp });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: 'Email, OTP, and new password are required' });
+    }
+
+    const entry = otpStore.get(email);
+    if (!entry || entry.otp !== otp || entry.expiresAt < Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    const user = await UserModel.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: 'No account found with that email' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await UserModel.updatePassword(user.id, passwordHash);
+    otpStore.delete(email);
+
+    res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { register, login, me, forgotPassword, resetPassword };

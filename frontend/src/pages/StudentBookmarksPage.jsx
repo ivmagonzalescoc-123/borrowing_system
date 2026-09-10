@@ -5,6 +5,7 @@ import BookDetailModal from '../components/BookDetailModal';
 import ReservationSuccessModal from '../components/ReservationSuccessModal';
 import { useBookmarks } from '../context/BookmarkContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useToast } from '../context/ToastContext';
 
 export default function StudentBookmarksPage() {
   const [books, setBooks] = useState([]);
@@ -14,6 +15,7 @@ export default function StudentBookmarksPage() {
   const [formError, setFormError] = useState('');
   const { bookmarkedIds } = useBookmarks();
   const { addNotification } = useNotifications();
+  const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
     const res = await api.get('/books');
@@ -34,9 +36,12 @@ export default function StudentBookmarksPage() {
       setSelectedBook(null);
       setReservationResult(res.data.record);
       addNotification(`You have successfully reserved "${res.data.record.book_title}".`);
+      showSuccess('Book reserved successfully');
       loadBooks();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to reserve book');
+      const message = err.response?.data?.message || 'Failed to reserve book';
+      setFormError(message);
+      showError(message);
     } finally {
       setSubmitting(false);
     }

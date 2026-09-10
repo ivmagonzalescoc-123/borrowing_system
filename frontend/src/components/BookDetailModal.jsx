@@ -44,8 +44,12 @@ export default function BookDetailModal({ book, onClose, onSubmitReservation, su
         {step === 'details' ? (
           <>
             <div className="modal-header-grid">
-              <div className="modal-cover" style={{ background: coverColor(book.title) }}>
-                <span>{coverInitial(book.title)}</span>
+              <div className="modal-cover" style={book.cover_url ? undefined : { background: coverColor(book.title) }}>
+                {book.cover_url ? (
+                  <img src={book.cover_url} alt="" />
+                ) : (
+                  <span>{coverInitial(book.title)}</span>
+                )}
               </div>
               <div className="modal-meta-grid">
                 <div>

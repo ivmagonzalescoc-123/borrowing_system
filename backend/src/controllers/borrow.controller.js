@@ -1,5 +1,6 @@
 const BorrowModel = require('../models/borrow.model');
 const BookModel = require('../models/book.model');
+const NotificationModel = require('../models/notification.model');
 
 const DEFAULT_LOAN_DAYS = 7;
 
@@ -54,6 +55,10 @@ async function handoverBook(req, res, next) {
       staffId: req.user.id,
       dueDate: dueDate.toISOString().slice(0, 10),
     });
+    await NotificationModel.create({
+      userId: updated.student_id,
+      message: `Your reservation for "${updated.book_title}" has been handed over. Please return it by ${updated.due_date}.`,
+    });
     res.json({ record: updated });
   } catch (err) {
     next(err);
@@ -70,6 +75,10 @@ async function returnBook(req, res, next) {
 
     const updated = await BorrowModel.markReturned(req.params.id);
     await BookModel.incrementAvailable(record.book_id);
+    await NotificationModel.create({
+      userId: updated.student_id,
+      message: `Your borrowed book "${updated.book_title}" has been marked as returned. Thank you!`,
+    });
     res.json({ record: updated });
   } catch (err) {
     next(err);

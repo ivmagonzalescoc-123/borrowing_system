@@ -11,10 +11,10 @@ const BookModel = {
     return rows[0] || null;
   },
 
-  async create({ title, author, isbn, category, publisher, publishedDate, description, totalCopies }) {
+  async create({ title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies }) {
     const [result] = await db.query(
-      `INSERT INTO books (title, author, isbn, category, publisher, published_date, description, total_copies, available_copies)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO books (title, author, isbn, category, publisher, published_date, description, cover_url, total_copies, available_copies)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title,
         author,
@@ -23,6 +23,7 @@ const BookModel = {
         publisher || null,
         publishedDate || null,
         description || null,
+        coverUrl || null,
         totalCopies,
         totalCopies,
       ]
@@ -30,10 +31,10 @@ const BookModel = {
     return this.findById(result.insertId);
   },
 
-  async update(id, { title, author, isbn, category, publisher, publishedDate, description, totalCopies }) {
+  async update(id, { title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies }) {
     await db.query(
       `UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, publisher = ?,
-              published_date = ?, description = ?, total_copies = ?
+              published_date = ?, description = ?, cover_url = ?, total_copies = ?
        WHERE id = ?`,
       [
         title,
@@ -43,6 +44,7 @@ const BookModel = {
         publisher || null,
         publishedDate || null,
         description || null,
+        coverUrl || null,
         totalCopies,
         id,
       ]

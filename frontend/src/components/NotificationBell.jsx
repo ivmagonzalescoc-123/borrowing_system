@@ -45,7 +45,7 @@ export default function NotificationBell() {
             notifications.map((n) => (
               <div key={n.id} className="notification-item">
                 <p>{n.message}</p>
-                <span>{timeAgo(n.createdAt)}</span>
+                <span>{timeAgo(n.created_at)}</span>
               </div>
             ))
           )}

@@ -5,6 +5,7 @@ import BookCatalogCard from '../components/BookCatalogCard';
 import BookDetailModal from '../components/BookDetailModal';
 import AddBookModal from '../components/AddBookModal';
 import BookSearchBar from '../components/BookSearchBar';
+import { useToast } from '../context/ToastContext';
 
 export default function StaffCatalogPage() {
   const [books, setBooks] = useState([]);
@@ -14,6 +15,7 @@ export default function StaffCatalogPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
     const res = await api.get('/books');
@@ -48,21 +50,29 @@ export default function StaffCatalogPage() {
     try {
       await api.post('/books', payload);
       setShowAddModal(false);
+      showSuccess('Book added successfully');
       loadBooks();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to add book');
+      const message = err.response?.data?.message || 'Failed to add book';
+      setFormError(message);
+      showError(message);
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDeleteBook(book) {
-    await api.delete(`/books/${book.id}`);
-    loadBooks();
+    try {
+      await api.delete(`/books/${book.id}`);
+      showSuccess('Book deleted successfully');
+      loadBooks();
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to delete book');
+    }
   }
 
   return (
-    <div className="page">
+    <div className="page catalog-page">
       <div className="page-header">
         <div>
           <h1>Book References Catalog</h1>
@@ -82,11 +92,13 @@ export default function StaffCatalogPage() {
         categories={categories}
       />
 
-      <div className="catalog-grid">
-        {filteredBooks.map((book) => (
-          <BookCatalogCard key={book.id} book={book} onOpen={setSelectedBook} onDelete={handleDeleteBook} />
-        ))}
-        {filteredBooks.length === 0 && <p className="empty-state">No books match your search.</p>}
+      <div className="catalog-scroll-area">
+        <div className="catalog-grid">
+          {filteredBooks.map((book) => (
+            <BookCatalogCard key={book.id} book={book} onOpen={setSelectedBook} onDelete={handleDeleteBook} />
+          ))}
+          {filteredBooks.length === 0 && <p className="empty-state">No books match your search.</p>}
+        </div>
       </div>
 
       {selectedBook && (

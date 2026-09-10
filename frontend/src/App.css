@@ -165,6 +165,13 @@ a {
   flex-shrink: 0;
 }
 
+.sidebar-link span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .sidebar.is-collapsed .sidebar-link {
   justify-content: center;
   padding: 0.6rem;
@@ -689,6 +696,21 @@ button:disabled {
   border: 1px solid var(--gray-200);
 }
 
+/* Catalog page: header + search bar stay fixed, only the grid scrolls */
+.catalog-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.catalog-scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -0.25rem;
+  padding: 0 0.25rem 0.25rem;
+}
+
 /* Catalog grid (product-catalog style) */
 .catalog-grid {
   display: grid;
@@ -703,14 +725,14 @@ button:disabled {
   border-radius: var(--radius-md);
   overflow: hidden;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease;
   display: flex;
   flex-direction: column;
 }
 
 .catalog-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
+  border-color: var(--green-600);
 }
 
 .catalog-card-delete {
@@ -737,12 +759,19 @@ button:disabled {
   align-items: center;
   justify-content: center;
   color: white;
+  overflow: hidden;
 }
 
 .catalog-card-cover span {
   font-size: 2rem;
   font-weight: 600;
   opacity: 0.92;
+}
+
+.catalog-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .catalog-card-body {
@@ -958,12 +987,19 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .modal-cover span {
   font-size: 2.1rem;
   font-weight: 600;
   opacity: 0.92;
+}
+
+.modal-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .modal-title {
@@ -1027,6 +1063,179 @@ button:disabled {
   gap: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--gray-100);
+}
+
+/* App toast (centered success/fail feedback) */
+.app-toast-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.app-toast-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 220px;
+  max-width: 320px;
+  padding: 1.75rem 2rem;
+  border-radius: var(--radius-lg);
+  background: rgba(20, 20, 15, 0.88);
+  box-shadow: var(--shadow-md);
+  animation: app-toast-in 0.2s ease-out, app-toast-out 0.25s ease-in 1.95s forwards;
+}
+
+.app-toast-message {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: white;
+  order: 1;
+}
+
+.app-toast-icon {
+  order: 2;
+}
+
+.app-toast-success .app-toast-icon {
+  color: var(--green-50);
+}
+
+.app-toast-error .app-toast-icon {
+  color: #ffb4ac;
+}
+
+@keyframes app-toast-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes app-toast-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* Google account picker (demo mock) */
+.google-picker-card {
+  max-width: 360px;
+  text-align: center;
+  padding: 2rem 1.75rem 1.5rem;
+}
+
+.google-picker-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.google-picker-title {
+  margin: 0.4rem 0 0;
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.google-picker-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+
+.google-account-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-align: left;
+}
+
+.google-account-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  background: white;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.google-account-row:last-child {
+  border-bottom: none;
+}
+
+.google-account-row:not(:disabled):hover {
+  background: var(--gray-50, var(--gray-100));
+}
+
+.google-account-row-disabled {
+  color: var(--gray-400);
+  cursor: not-allowed;
+}
+
+.google-account-avatar {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--green-600);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.google-account-avatar-muted {
+  background: var(--gray-200);
+  color: var(--gray-500);
+}
+
+.google-account-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.google-account-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.google-account-email {
+  font-size: 0.78rem;
+  color: var(--gray-500);
+}
+
+.google-picker-footnote {
+  margin: 1rem 0 0;
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  text-align: center;
 }
 
 /* Reservation form */

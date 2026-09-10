@@ -18,8 +18,12 @@ export default function BookCatalogCard({ book, onOpen, onDelete }) {
           <Trash2 size={14} strokeWidth={1.75} />
         </button>
       )}
-      <div className="catalog-card-cover" style={{ background: coverColor(book.title) }}>
-        <span>{coverInitial(book.title)}</span>
+      <div className="catalog-card-cover" style={book.cover_url ? undefined : { background: coverColor(book.title) }}>
+        {book.cover_url ? (
+          <img src={book.cover_url} alt="" loading="lazy" />
+        ) : (
+          <span>{coverInitial(book.title)}</span>
+        )}
       </div>
       <div className="catalog-card-body">
         {book.category && <span className="catalog-card-tag">{book.category}</span>}

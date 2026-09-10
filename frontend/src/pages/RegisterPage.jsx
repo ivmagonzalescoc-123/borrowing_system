@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import AuthWaveHero from '../components/AuthWaveHero';
 
 export default function RegisterPage() {
@@ -15,6 +16,7 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState('');
   const { register } = useAuth();
+  const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
   function update(field) {
@@ -26,9 +28,12 @@ export default function RegisterPage() {
     setError('');
     try {
       const user = await register(form);
+      showSuccess('Registration successful');
       navigate(user.role === 'staff' ? '/staff' : '/student');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      const message = err.response?.data?.message || 'Registration failed';
+      setError(message);
+      showError(message);
     }
   }
 
@@ -56,12 +61,13 @@ export default function RegisterPage() {
         </label>
         <label>
           Email
-          <input type="email" value={form.email} onChange={update('email')} required />
+          <input type="email" autoComplete="off" value={form.email} onChange={update('email')} required />
         </label>
         <label>
           Password
           <input
             type="password"
+            autoComplete="off"
             value={form.password}
             onChange={update('password')}
             required

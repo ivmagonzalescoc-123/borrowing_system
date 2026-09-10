@@ -11,3 +11,21 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* Edge/Windows adds its own oval reveal-password and clear-text buttons
+   inside inputs, which overlap our custom icons and crowd out the typed
+   text. Hide the native ones everywhere. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+/* Chromium/Edge paint saved-autofill text with a rounded highlight behind it
+   while typing. Force it transparent so it matches our own input styling. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: inherit;
+  -webkit-box-shadow: 0 0 0 1000px transparent inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
