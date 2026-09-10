@@ -2,7 +2,7 @@ const db = require('../config/db');
 const { generateReferenceNo } = require('../utils/referenceNumber');
 
 const RECORD_SELECT = `
-  SELECT br.*, b.title AS book_title, b.author AS book_author,
+  SELECT br.*, b.title AS book_title, b.author AS book_author, b.cover_url AS book_cover_url,
          u.full_name AS student_name, u.id_number AS student_id_number
   FROM borrow_records br
   JOIN books b ON b.id = br.book_id

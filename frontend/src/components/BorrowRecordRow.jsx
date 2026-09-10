@@ -5,8 +5,12 @@ import { formatDate, formatTime } from '../utils/dateFormat';
 export default function BorrowRecordRow({ record, showStudent = false, action }) {
   return (
     <div className="record-row">
-      <div className="record-cover" style={{ background: coverColor(record.book_title) }}>
-        <span>{coverInitial(record.book_title)}</span>
+      <div className="record-cover" style={record.book_cover_url ? undefined : { background: coverColor(record.book_title) }}>
+        {record.book_cover_url ? (
+          <img src={record.book_cover_url} alt="" />
+        ) : (
+          <span>{coverInitial(record.book_title)}</span>
+        )}
       </div>
       <div className="record-info">
         <p className="record-title">{record.book_title}</p>
