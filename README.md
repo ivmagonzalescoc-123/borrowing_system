@@ -1,4 +1,4 @@
-# Library Book Borrowing System (Template)
+# Library Book Borrowing System
 
 Full-stack starter template with staff/student login and a basic book
 borrowing workflow.
@@ -18,7 +18,7 @@ Open the XAMPP Control Panel and click **Start** next to **MySQL**.
 (You don't need to start Apache — this app runs its own Node server.)
 
 **2. Create your config files.** From the project's root folder, run:
-NOTE! If the file has .env already for backend and front end ignore this step
+>NOTE! If the file has .env already for backend and front end ignore this step
 ```
 copy backend\.env.example backend\.env
 copy frontend\.env.example frontend\.env
