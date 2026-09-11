@@ -5,7 +5,55 @@ borrowing workflow.
 
 - **Backend:** Node.js + Express, MVC structure, MySQL (via XAMPP), JWT auth
 - **Frontend:** Vite + React, React Router, Axios, lucide-react icons, COC (yellow & green) theme
-- **Database:** MySQL, managed through XAMPP / phpMyAdmin
+- **Database:** MySQL, managed through XAMPP
+
+## 🚀 Quick Start
+
+Follow these steps in order — copy-paste each command as you go. You only
+need **Node.js** and **XAMPP** installed beforehand. Nothing else to
+prepare, and you do **not** need to import any database file by hand.
+
+**1. Start MySQL.**
+Open the XAMPP Control Panel and click **Start** next to **MySQL**.
+(You don't need to start Apache — this app runs its own Node server.)
+
+**2. Create your config files.** From the project's root folder, run:
+```
+copy backend\.env.example backend\.env
+copy frontend\.env.example frontend\.env
+```
+This only needs to be done once. You don't need to open or edit these
+files unless your MySQL has a custom root password (see the note below).
+
+**3. Install all dependencies.** Still in the root folder, run:
+```
+npm run install:all
+```
+
+**4. Run the app.** Still in the root folder, run:
+```
+npm run dev
+```
+This starts the backend (`http://localhost:5000`) and the frontend
+(`http://localhost:5173`) together in one terminal.
+
+**5. Open the app.** Go to `http://localhost:5173` in your browser and log
+in with a demo account:
+
+| Role    | Email                  | Password      |
+|---------|------------------------|----------------|
+| Staff   | `staff@example.com`    | `password123` |
+| Student | `student@example.com`  | `password123` |
+
+That's it — everything below is extra detail for people who want to know
+how it works or run things separately.
+
+> **Note about `DB_PASSWORD`:** a fresh, unmodified XAMPP install has **no**
+> MySQL root password, which is why `backend/.env.example` ships with
+> `DB_PASSWORD=` left blank — most people can leave it exactly like that.
+> Only edit `backend/.env` and fill in `DB_PASSWORD` if you've deliberately
+> set a password on your own MySQL. This value is personal to your machine
+> — never copy a teammate's.
 
 ## Layout
 
@@ -19,7 +67,8 @@ Each portal (student / staff) has a sidebar with three sections:
   printable confirmation. Staff see the same catalog for managing inventory
   (add/delete) instead of reserving.
 - **Reservations** — pending requests awaiting counter pickup. Staff can
-  **Hand Over** a reservation here.
+  **Hand Over** a reservation here (typing in the reservation's reference
+  number to confirm).
 - **Borrowed Books** — books currently checked out and past returns. Staff
   can **Mark Returned** here.
 
@@ -72,38 +121,25 @@ Prototype/
     └── .env.example
 ```
 
-## 1. Database setup (XAMPP)
+## Running backend/frontend separately (optional)
 
-1. Start **MySQL** from the XAMPP control panel (Apache isn't needed — the
-   backend runs its own Node server).
-2. That's it — no manual import step. The backend automatically creates the
-   `library_db` database, all tables, and the seed data (two demo accounts,
-   password `password123`, plus 23 sample books) the first time you run
-   `npm run dev` / `npm start` in `backend/`. It re-checks on every start and
-   does nothing if everything already exists, so it's always safe to run.
-   - Staff: `staff@example.com`
-   - Student: `student@example.com`
-
-   (If you ever want to run it by hand instead — e.g. via phpMyAdmin's
-   `Import` — the file is `backend/database/schema.sql`.)
-
-## 2. Backend setup
+The Quick Start above runs everything together with `npm run dev` from the
+root. If you'd rather run each one in its own terminal (useful for reading
+logs separately), you can do that instead:
 
 ```
 cd backend
 npm install
-copy .env.example .env      # see note below before editing
 npm run dev                 # starts on http://localhost:5000
 ```
 
-**About `DB_PASSWORD` in `.env`:** this must match *your own* MySQL root
-password, not whatever a teammate uses. A fresh, unmodified XAMPP install
-has **no root password**, which is why `.env.example` ships with
-`DB_PASSWORD=` (blank) — most people can leave it as-is. Only change it if
-you've deliberately set a MySQL root password on your machine. Also set
-`JWT_SECRET` to any random string.
+```
+cd frontend
+npm install
+npm run dev                 # starts on http://localhost:5173
+```
 
-Health check: `GET http://localhost:5000/api/health`
+Health check for the backend: `GET http://localhost:5000/api/health`
 
 ### API overview
 
@@ -127,28 +163,6 @@ Health check: `GET http://localhost:5000/api/health`
 | POST   | /api/notifications        | authenticated | Create a notification for myself |
 | PATCH  | /api/notifications/mark-read | authenticated | Mark all my notifications as read |
 
-## 3. Frontend setup
-
-```
-cd frontend
-npm install
-copy .env.example .env      # VITE_API_URL should point at the backend
-npm run dev                 # starts on http://localhost:5173
-```
-
-## Running both at once (optional)
-
-From the project root you can install and run both servers together
-instead of `cd`-ing into each folder. Note that plain `npm install` at the
-root only installs the root's own devDependency (`concurrently`) — it does
-**not** install `backend/` or `frontend/`'s dependencies. Use
-`npm run install:all` for that:
-
-```
-npm run install:all         # installs root + backend + frontend dependencies
-npm run dev                 # runs backend and frontend concurrently
-```
-
 ## Notes
 
 - Passwords are hashed with bcrypt; never stored in plain text.
@@ -157,4 +171,4 @@ npm run dev                 # runs backend and frontend concurrently
 - `JWT_SECRET` in `backend/.env` should be replaced with a long random
   string before any real deployment.
 - This is a starting template — extend it with features like fines,
-  reservations, due-date reminders, or book categories as needed.
+  due-date reminders, or book categories as needed.
