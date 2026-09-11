@@ -32,8 +32,10 @@ COC (yellow/green) theme:
 2. **Borrowed** (green) — staff handed the physical book to the student ("Hand Over").
 3. **Returned** (gray) — staff received the book back; the copy is available again.
 
-A notification bell in the navbar confirms successful reservations, and
-bookmarks are saved per-user — both stored in the browser's localStorage.
+A notification bell in the navbar shows reservation/hand-over/return updates
+(stored server-side per user, so a student sees updates staff make from a
+different device). Bookmarks are saved per-user in the browser's
+localStorage.
 
 ## Project structure
 
@@ -41,27 +43,30 @@ bookmarks are saved per-user — both stored in the browser's localStorage.
 Prototype/
 ├── backend/
 │   ├── database/
-│   │   └── schema.sql          # tables + seed data
+│   │   └── schema.sql          # tables + seed data (auto-applied on startup)
 │   ├── src/
 │   │   ├── config/db.js        # MySQL connection pool
-│   │   ├── controllers/        # request handlers (auth, books,borrows)
+│   │   ├── config/migrate.js   # runs schema.sql on every server start
+│   │   ├── controllers/        # request handlers (auth, books, borrows, notifications)
 │   │   ├── middleware/         # JWT auth, role guard, error handler
-│   │   ├── models/             # SQL queries (User, Book, Borrow)
+│   │   ├── models/             # SQL queries (User, Book, Borrow, Notification)
 │   │   ├── routes/             # Express routers
 │   │   └── app.js              # Express app + route wiring
-│   ├── server.js                # entry point
+│   ├── server.js                # entry point (runs migrate() before listening)
 │   ├── .env                     # local config (not committed)
 │   └── .env.example
 └── frontend/
+    ├── public/assets/img/       # local book cover images (no internet needed)
     ├── src/
     │   ├── api/axios.js         # axios instance + auth header
-    │   ├── context/            # AuthContext, NotificationContext, BookmarkContext
-    │   ├── components/          # Navbar, Sidebar, ProfileMenu, NotificationBell,
+    │   ├── context/            # AuthContext, NotificationContext, BookmarkContext, ToastContext
+    │   ├── components/          # Navbar, Sidebar, ProfileMenu, NotificationBell, AppToast,
     │   │                        # BookCatalogCard, BookDetailModal, AddBookModal,
-    │   │                        # BorrowRecordRow, ReservationSuccessModal, StatusBadge
+    │   │                        # BorrowRecordRow, ReservationSuccessModal, HandoverModal,
+    │   │                        # ForgotPasswordModal, GoogleLoginModal, StatusBadge
     │   ├── utils/                # dateFormat, bookCover helpers
     │   └── pages/                # Login, Register,
-    │                              # Student{Catalog,Reservations,Borrowed}Page,
+    │                              # Student{Catalog,Reservations,Borrowed,Bookmarks}Page,
     │                              # Staff{Catalog,Reservations,Borrowed}Page
     ├── .env                      # local config (not committed)
     └── .env.example
@@ -69,25 +74,34 @@ Prototype/
 
 ## 1. Database setup (XAMPP)
 
-1. Start **Apache** and **MySQL** from the XAMPP control panel.
-2. Import the schema either via phpMyAdmin (`Import` → select
-   `backend/database/schema.sql`) or from a terminal:
-   ```
-   "C:\xampp\mysql\bin\mysql.exe" -u root -p < backend/database/schema.sql
-   ```
-   This creates the `library_db` database with `users`, `books`, and
-   `borrow_records` tables, plus two seed accounts (password: `password123`):
+1. Start **MySQL** from the XAMPP control panel (Apache isn't needed — the
+   backend runs its own Node server).
+2. That's it — no manual import step. The backend automatically creates the
+   `library_db` database, all tables, and the seed data (two demo accounts,
+   password `password123`, plus 23 sample books) the first time you run
+   `npm run dev` / `npm start` in `backend/`. It re-checks on every start and
+   does nothing if everything already exists, so it's always safe to run.
    - Staff: `staff@example.com`
    - Student: `student@example.com`
+
+   (If you ever want to run it by hand instead — e.g. via phpMyAdmin's
+   `Import` — the file is `backend/database/schema.sql`.)
 
 ## 2. Backend setup
 
 ```
 cd backend
 npm install
-copy .env.example .env      # then edit DB_PASSWORD / JWT_SECRET as needed
+copy .env.example .env      # see note below before editing
 npm run dev                 # starts on http://localhost:5000
 ```
+
+**About `DB_PASSWORD` in `.env`:** this must match *your own* MySQL root
+password, not whatever a teammate uses. A fresh, unmodified XAMPP install
+has **no root password**, which is why `.env.example` ships with
+`DB_PASSWORD=` (blank) — most people can leave it as-is. Only change it if
+you've deliberately set a MySQL root password on your machine. Also set
+`JWT_SECRET` to any random string.
 
 Health check: `GET http://localhost:5000/api/health`
 
@@ -98,15 +112,20 @@ Health check: `GET http://localhost:5000/api/health`
 | POST   | /api/auth/register        | public        | Create staff/student account |
 | POST   | /api/auth/login           | public        | Login, returns JWT       |
 | GET    | /api/auth/me              | authenticated | Current user profile     |
+| POST   | /api/auth/forgot-password | public        | Generate an OTP for password reset (no SMTP configured — OTP is returned in the response, not emailed) |
+| POST   | /api/auth/reset-password  | public        | Reset password using the OTP |
 | GET    | /api/books                | authenticated | List all books           |
-| POST   | /api/books                | staff         | Add a book (title, author, isbn, category, publisher, publishedDate, description, totalCopies) |
+| POST   | /api/books                | staff         | Add a book (title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies) |
 | PUT    | /api/books/:id            | staff         | Update a book             |
 | DELETE | /api/books/:id            | staff         | Delete a book              |
 | POST   | /api/borrows              | student       | Reserve a book (bookId, purpose, requestStartDate, requestEndDate, requestTime, policyAgreed) — status → `reserved`, generates a reference number |
-| PATCH  | /api/borrows/:id/handover | staff         | Hand the physical book over (status → `borrowed`) |
-| PATCH  | /api/borrows/:id/return   | staff         | Mark a book as returned (status → `returned`) |
+| PATCH  | /api/borrows/:id/handover | staff         | Hand the physical book over (status → `borrowed`), notifies the student |
+| PATCH  | /api/borrows/:id/return   | staff         | Mark a book as returned (status → `returned`), notifies the student |
 | GET    | /api/borrows/mine         | student       | My reservations/loans      |
 | GET    | /api/borrows              | staff         | All reservations/loans     |
+| GET    | /api/notifications/mine   | authenticated | My notifications           |
+| POST   | /api/notifications        | authenticated | Create a notification for myself |
+| PATCH  | /api/notifications/mark-read | authenticated | Mark all my notifications as read |
 
 ## 3. Frontend setup
 
@@ -120,11 +139,13 @@ npm run dev                 # starts on http://localhost:5173
 ## Running both at once (optional)
 
 From the project root you can install and run both servers together
-instead of `cd`-ing into each folder:
+instead of `cd`-ing into each folder. Note that plain `npm install` at the
+root only installs the root's own devDependency (`concurrently`) — it does
+**not** install `backend/` or `frontend/`'s dependencies. Use
+`npm run install:all` for that:
 
 ```
-npm install                 # installs root devDependency (concurrently)
-npm run install:all         # installs backend + frontend dependencies
+npm run install:all         # installs root + backend + frontend dependencies
 npm run dev                 # runs backend and frontend concurrently
 ```
 
