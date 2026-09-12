@@ -104,8 +104,12 @@ a {
   letter-spacing: 0.01em;
 }
 
-.navbar-brand svg {
-  color: var(--yellow-500);
+.navbar-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .navbar-links {
@@ -118,8 +122,8 @@ a {
 .sidebar {
   width: 232px;
   flex-shrink: 0;
-  background: var(--white);
-  border-right: 1px solid var(--gray-200);
+  background: var(--yellow-50);
+  border-right: 1px solid rgba(242, 183, 5, 0.25);
   padding: 1.25rem 0.9rem;
   display: flex;
   flex-direction: column;
@@ -152,13 +156,13 @@ a {
 }
 
 .sidebar-link:hover {
-  background: var(--gray-100);
+  background: rgba(242, 183, 5, 0.15);
   color: var(--gray-900);
 }
 
 .sidebar-link.is-active {
-  background: var(--green-50);
-  color: var(--green-700);
+  background: var(--yellow-500);
+  color: var(--white);
 }
 
 .sidebar-link svg {
@@ -192,7 +196,7 @@ a {
   padding: 0.6rem 0.8rem;
   font-size: 0.85rem;
   font-weight: 500;
-  border-top: 1px solid var(--gray-100);
+  border-top: 1px solid rgba(242, 183, 5, 0.25);
   border-radius: 0;
   margin-top: 0.75rem;
   padding-top: 1rem;
@@ -365,6 +369,20 @@ button:disabled {
   background: var(--green-900);
 }
 
+.btn-yellow {
+  background: var(--yellow-500);
+  color: var(--gray-900);
+}
+
+.btn-yellow:hover:not(:disabled) {
+  background: var(--yellow-600);
+}
+
+.btn-yellow.is-loading:disabled {
+  background: var(--yellow-500);
+  color: var(--gray-900);
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--gray-500);
@@ -374,6 +392,89 @@ button:disabled {
 .btn-ghost:hover {
   background: var(--gray-100);
   color: var(--gray-900);
+}
+
+/* Loading buttons keep their brand color instead of going flat gray */
+button.is-loading:disabled {
+  background: var(--green-700);
+  color: white;
+  opacity: 0.9;
+  cursor: progress;
+}
+
+.btn-google.is-loading:disabled,
+.google-account-row.is-loading:disabled {
+  background: var(--white);
+  color: var(--gray-900);
+  opacity: 0.85;
+}
+
+.catalog-card-delete.is-loading:disabled {
+  background: var(--red-50);
+  color: var(--red-600);
+  opacity: 0.9;
+}
+
+/* Sparkle spinner - a small spinning, twinkling star used as the loading motif */
+.sparkle-spinner {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sparkle-spinner-main {
+  color: currentColor;
+  fill: currentColor;
+  transform-origin: center;
+  animation: sparkle-spin-pulse 1.6s ease-in-out infinite;
+}
+
+.sparkle-spinner-mini {
+  position: absolute;
+  color: currentColor;
+  fill: currentColor;
+  opacity: 0;
+  animation: sparkle-twinkle 1.6s ease-in-out infinite;
+}
+
+.sparkle-spinner-mini-a {
+  top: -15%;
+  right: -20%;
+  animation-delay: 0.25s;
+}
+
+.sparkle-spinner-mini-b {
+  bottom: -10%;
+  left: -22%;
+  animation-delay: 0.75s;
+}
+
+@keyframes sparkle-spin-pulse {
+  0% {
+    transform: rotate(0deg) scale(0.8);
+    opacity: 0.75;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(0.8);
+    opacity: 0.75;
+  }
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.3) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
 }
 
 .bookmark-button.is-bookmarked {
@@ -623,6 +724,12 @@ button:disabled {
   margin: 0;
   font-size: 0.78rem;
   color: var(--red-600);
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--gray-500);
 }
 
 .forgot-password-link {
@@ -1353,6 +1460,47 @@ button:disabled {
   background: var(--gray-100);
   border-radius: var(--radius-sm);
   padding: 0.6rem 0.8rem;
+}
+
+.cover-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.cover-input-row input[type='url'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.cover-input-divider {
+  font-size: 0.8rem;
+  color: var(--gray-400);
+}
+
+.reservation-form .cover-upload-button {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  cursor: pointer;
+}
+
+.cover-preview {
+  margin-top: 0.5rem;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+}
+
+.cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .policy-agreement {

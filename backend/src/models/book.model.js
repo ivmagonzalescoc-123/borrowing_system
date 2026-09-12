@@ -31,10 +31,10 @@ const BookModel = {
     return this.findById(result.insertId);
   },
 
-  async update(id, { title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies }) {
+  async update(id, { title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies, availableCopies }) {
     await db.query(
       `UPDATE books SET title = ?, author = ?, isbn = ?, category = ?, publisher = ?,
-              published_date = ?, description = ?, cover_url = ?, total_copies = ?
+              published_date = ?, description = ?, cover_url = ?, total_copies = ?, available_copies = ?
        WHERE id = ?`,
       [
         title,
@@ -46,6 +46,7 @@ const BookModel = {
         description || null,
         coverUrl || null,
         totalCopies,
+        availableCopies,
         id,
       ]
     );

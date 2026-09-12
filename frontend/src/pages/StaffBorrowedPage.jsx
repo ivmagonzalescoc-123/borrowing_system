@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import BorrowRecordRow from '../components/BorrowRecordRow';
+import SparkleSpinner from '../components/SparkleSpinner';
 import { useToast } from '../context/ToastContext';
 
 export default function StaffBorrowedPage() {
   const [records, setRecords] = useState([]);
+  const [returningId, setReturningId] = useState(null);
   const { showSuccess, showError } = useToast();
 
   async function loadData() {
@@ -17,12 +19,15 @@ export default function StaffBorrowedPage() {
   }, []);
 
   async function handleMarkReturned(id) {
+    setReturningId(id);
     try {
       await api.patch(`/borrows/${id}/return`);
       showSuccess('Book marked as returned');
       loadData();
     } catch (err) {
       showError(err.response?.data?.message || 'Failed to mark book as returned');
+    } finally {
+      setReturningId(null);
     }
   }
 
@@ -43,8 +48,19 @@ export default function StaffBorrowedPage() {
             showStudent
             action={
               record.status === 'borrowed' && (
-                <button className="btn-primary" onClick={() => handleMarkReturned(record.id)}>
-                  Mark Returned
+                <button
+                  className={`btn-primary${returningId === record.id ? ' is-loading' : ''}`}
+                  disabled={returningId === record.id}
+                  onClick={() => handleMarkReturned(record.id)}
+                >
+                  {returningId === record.id ? (
+                    <>
+                      <SparkleSpinner size={16} />
+                      Returning…
+                    </>
+                  ) : (
+                    'Mark Returned'
+                  )}
                 </button>
               )
             }

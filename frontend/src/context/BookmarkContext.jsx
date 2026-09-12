@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
+import { useToast } from './ToastContext';
 
 const BookmarkContext = createContext(null);
 
@@ -9,6 +10,7 @@ function storageKey(userId) {
 
 export function BookmarkProvider({ children }) {
   const { user } = useAuth();
+  const { showSuccess } = useToast();
   const [bookmarkedIds, setBookmarkedIds] = useState([]);
 
   useEffect(() => {
@@ -25,13 +27,15 @@ export function BookmarkProvider({ children }) {
   }, [user]);
 
   function toggleBookmark(bookId) {
-    const next = bookmarkedIds.includes(bookId)
+    const wasBookmarked = bookmarkedIds.includes(bookId);
+    const next = wasBookmarked
       ? bookmarkedIds.filter((id) => id !== bookId)
       : [...bookmarkedIds, bookId];
     setBookmarkedIds(next);
     if (user) {
       localStorage.setItem(storageKey(user.id), JSON.stringify(next));
     }
+    showSuccess(wasBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks');
   }
 
   function isBookmarked(bookId) {

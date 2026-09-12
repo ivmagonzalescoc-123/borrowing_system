@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, KeyRound } from 'lucide-react';
 import Portal from './Portal';
+import SparkleSpinner from './SparkleSpinner';
 
 export default function HandoverModal({ record, onClose, onConfirm, submitting, error }) {
   const [referenceNo, setReferenceNo] = useState('');
@@ -48,8 +49,15 @@ export default function HandoverModal({ record, onClose, onConfirm, submitting, 
 
             {(localError || error) && <p className="error">{localError || error}</p>}
 
-            <button type="submit" className="btn-primary" disabled={submitting}>
-              {submitting ? 'Handing over…' : 'Confirm Hand Over'}
+            <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
+              {submitting ? (
+                <>
+                  <SparkleSpinner size={16} />
+                  Handing over…
+                </>
+              ) : (
+                'Confirm Hand Over'
+              )}
             </button>
           </form>
         </div>

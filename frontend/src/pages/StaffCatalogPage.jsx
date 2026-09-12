@@ -13,8 +13,10 @@ export default function StaffCatalogPage() {
   const [category, setCategory] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [deletingId, setDeletingId] = useState(null);
   const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
@@ -61,13 +63,39 @@ export default function StaffCatalogPage() {
     }
   }
 
+  async function handleUpdateBook(payload) {
+    setSubmitting(true);
+    setFormError('');
+    try {
+      await api.put(`/books/${editingBook.id}`, payload);
+      setEditingBook(null);
+      showSuccess('Book updated successfully');
+      loadBooks();
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to update book';
+      setFormError(message);
+      showError(message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function handleEditBook(book) {
+    setFormError('');
+    setSelectedBook(null);
+    setEditingBook(book);
+  }
+
   async function handleDeleteBook(book) {
+    setDeletingId(book.id);
     try {
       await api.delete(`/books/${book.id}`);
       showSuccess('Book deleted successfully');
       loadBooks();
     } catch (err) {
       showError(err.response?.data?.message || 'Failed to delete book');
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -78,7 +106,7 @@ export default function StaffCatalogPage() {
           <h1>Book References Catalog</h1>
           <p className="page-subtitle">Manage the library's book inventory.</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+        <button className="btn-primary btn-yellow" onClick={() => setShowAddModal(true)}>
           <Plus size={16} strokeWidth={1.75} />
           Add Book
         </button>
@@ -95,14 +123,25 @@ export default function StaffCatalogPage() {
       <div className="catalog-scroll-area">
         <div className="catalog-grid">
           {filteredBooks.map((book) => (
-            <BookCatalogCard key={book.id} book={book} onOpen={setSelectedBook} onDelete={handleDeleteBook} />
+            <BookCatalogCard
+              key={book.id}
+              book={book}
+              onOpen={setSelectedBook}
+              onDelete={handleDeleteBook}
+              deleting={deletingId === book.id}
+            />
           ))}
           {filteredBooks.length === 0 && <p className="empty-state">No books match your search.</p>}
         </div>
       </div>
 
       {selectedBook && (
-        <BookDetailModal book={selectedBook} onClose={() => setSelectedBook(null)} readOnly />
+        <BookDetailModal
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+          onEdit={handleEditBook}
+          readOnly
+        />
       )}
 
       {showAddModal && (
@@ -111,6 +150,16 @@ export default function StaffCatalogPage() {
           error={formError}
           onClose={() => setShowAddModal(false)}
           onSubmit={handleAddBook}
+        />
+      )}
+
+      {editingBook && (
+        <AddBookModal
+          book={editingBook}
+          submitting={submitting}
+          error={formError}
+          onClose={() => setEditingBook(null)}
+          onSubmit={handleUpdateBook}
         />
       )}
     </div>

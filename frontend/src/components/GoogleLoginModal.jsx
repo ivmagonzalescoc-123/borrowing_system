@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Portal from './Portal';
+import SparkleSpinner from './SparkleSpinner';
 
 // Demo-only mock of Google's account picker. There is no real OAuth wired up —
 // selecting the account just signs in as the seeded demo student account so
@@ -69,13 +70,17 @@ export default function GoogleLoginModal({ onClose }) {
           <div className="google-account-list">
             <button
               type="button"
-              className="google-account-row"
+              className={`google-account-row${signingIn ? ' is-loading' : ''}`}
               onClick={handleChooseAccount}
               disabled={signingIn}
             >
-              <span className="google-account-avatar">
-                {DEMO_ACCOUNT.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
-              </span>
+              {signingIn ? (
+                <SparkleSpinner size={24} className="google-account-avatar" />
+              ) : (
+                <span className="google-account-avatar">
+                  {DEMO_ACCOUNT.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+                </span>
+              )}
               <span className="google-account-info">
                 <span className="google-account-name">{DEMO_ACCOUNT.name}</span>
                 <span className="google-account-email">{DEMO_ACCOUNT.email}</span>

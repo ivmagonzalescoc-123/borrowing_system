@@ -1,21 +1,23 @@
 import { Trash2 } from 'lucide-react';
 import { coverColor, coverInitial } from '../utils/bookCover';
+import SparkleSpinner from './SparkleSpinner';
 
-export default function BookCatalogCard({ book, onOpen, onDelete }) {
+export default function BookCatalogCard({ book, onOpen, onDelete, deleting }) {
   const isAvailable = book.available_copies > 0;
 
   return (
     <div className="catalog-card" onClick={() => onOpen(book)} role="button" tabIndex={0}>
       {onDelete && (
         <button
-          className="catalog-card-delete"
+          className={`catalog-card-delete${deleting ? ' is-loading' : ''}`}
           aria-label={`Delete ${book.title}`}
+          disabled={deleting}
           onClick={(e) => {
             e.stopPropagation();
             onDelete(book);
           }}
         >
-          <Trash2 size={14} strokeWidth={1.75} />
+          {deleting ? <SparkleSpinner size={14} /> : <Trash2 size={14} strokeWidth={1.75} />}
         </button>
       )}
       <div className="catalog-card-cover" style={book.cover_url ? undefined : { background: coverColor(book.title) }}>

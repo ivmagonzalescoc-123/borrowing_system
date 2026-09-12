@@ -3,6 +3,7 @@ import { X, Mail, KeyRound, Lock } from 'lucide-react';
 import api from '../api/axios';
 import { useToast } from '../context/ToastContext';
 import Portal from './Portal';
+import SparkleSpinner from './SparkleSpinner';
 
 export default function ForgotPasswordModal({ onClose }) {
   const [step, setStep] = useState('email'); // 'email' | 'reset' | 'done'
@@ -97,8 +98,15 @@ export default function ForgotPasswordModal({ onClose }) {
                   />
                 </div>
               </div>
-              <button type="submit" className="btn-primary" disabled={busy}>
-                {busy ? 'Sending…' : 'Send OTP'}
+              <button type="submit" className={`btn-primary${busy ? ' is-loading' : ''}`} disabled={busy}>
+                {busy ? (
+                  <>
+                    <SparkleSpinner size={16} />
+                    Sending…
+                  </>
+                ) : (
+                  'Send OTP'
+                )}
               </button>
             </form>
           )}
@@ -149,8 +157,15 @@ export default function ForgotPasswordModal({ onClose }) {
                   />
                 </div>
               </div>
-              <button type="submit" className="btn-primary" disabled={busy}>
-                {busy ? 'Resetting…' : 'Reset Password'}
+              <button type="submit" className={`btn-primary${busy ? ' is-loading' : ''}`} disabled={busy}>
+                {busy ? (
+                  <>
+                    <SparkleSpinner size={16} />
+                    Resetting…
+                  </>
+                ) : (
+                  'Reset Password'
+                )}
               </button>
             </form>
           )}

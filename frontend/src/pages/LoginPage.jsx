@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import AuthWaveHero from '../components/AuthWaveHero';
 import ForgotPasswordModal from '../components/ForgotPasswordModal';
 import GoogleLoginModal from '../components/GoogleLoginModal';
+import SparkleSpinner from '../components/SparkleSpinner';
 
 function GoogleIcon() {
   return (
@@ -38,6 +39,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const { login } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
@@ -52,6 +54,7 @@ export default function LoginPage() {
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    setSubmitting(true);
     try {
       const user = await login(email, password);
       showSuccess('Login successful');
@@ -60,6 +63,7 @@ export default function LoginPage() {
       const message = err.response?.data?.message || 'Login failed';
       setError(message);
       showError(message);
+      setSubmitting(false);
     }
   }
 
@@ -130,15 +134,22 @@ export default function LoginPage() {
           Forgot Password?
         </a>
 
-        <button type="submit" className="btn-primary">
-          Login
+        <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
+          {submitting ? (
+            <>
+              <SparkleSpinner size={16} />
+              Logging in…
+            </>
+          ) : (
+            'Login'
+          )}
         </button>
 
         <div className="auth-divider">
           <span>or</span>
         </div>
 
-        <button type="button" className="btn-google" onClick={handleGoogleLogin}>
+        <button type="button" className="btn-google" onClick={handleGoogleLogin} disabled={submitting}>
           <GoogleIcon />
           Continue with Google
         </button>

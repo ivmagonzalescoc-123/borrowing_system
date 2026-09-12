@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { X, ArrowLeft, Bookmark, BookmarkCheck, CalendarRange, Clock } from 'lucide-react';
+import { X, ArrowLeft, Bookmark, BookmarkCheck, CalendarRange, Clock, Pencil } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBookmarks } from '../context/BookmarkContext';
 import { coverColor, coverInitial } from '../utils/bookCover';
 import { formatDate } from '../utils/dateFormat';
 import Portal from './Portal';
+import SparkleSpinner from './SparkleSpinner';
 
-export default function BookDetailModal({ book, onClose, onSubmitReservation, submitting, error, readOnly }) {
+export default function BookDetailModal({ book, onClose, onSubmitReservation, submitting, error, readOnly, onEdit }) {
   const { user } = useAuth();
   const { isBookmarked, toggleBookmark } = useBookmarks();
   const [step, setStep] = useState('details');
@@ -101,6 +102,15 @@ export default function BookDetailModal({ book, onClose, onSubmitReservation, su
                 </button>
               </div>
             )}
+
+            {readOnly && onEdit && (
+              <div className="modal-action-row">
+                <button className="btn-primary btn-yellow" onClick={() => onEdit(book)}>
+                  <Pencil size={16} strokeWidth={1.75} />
+                  Edit Book
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -160,8 +170,15 @@ export default function BookDetailModal({ book, onClose, onSubmitReservation, su
 
               {error && <p className="error">{error}</p>}
 
-              <button type="submit" className="btn-primary" disabled={submitting}>
-                {submitting ? 'Submitting...' : 'Confirm Reservation'}
+              <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <SparkleSpinner size={16} />
+                    Reserving…
+                  </>
+                ) : (
+                  'Confirm Reservation'
+                )}
               </button>
             </form>
           </>

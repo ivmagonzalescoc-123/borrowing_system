@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 
@@ -14,6 +15,11 @@ const app = express();
 const allowedOrigin = process.env.FRONTEND_URL;
 app.use(cors(allowedOrigin ? { origin: allowedOrigin } : {}));
 app.use(express.json());
+
+// Staff-uploaded book cover images (see book.routes.js POST /books/upload-cover).
+// Note: on hosts with an ephemeral filesystem (e.g. Render's free tier), these
+// files are lost on redeploy/restart — fine for a demo, not for production use.
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

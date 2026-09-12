@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import AuthWaveHero from '../components/AuthWaveHero';
+import SparkleSpinner from '../components/SparkleSpinner';
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -15,6 +16,7 @@ export default function RegisterPage() {
     department: '',
   });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const { register } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
@@ -26,6 +28,7 @@ export default function RegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       const user = await register(form);
       showSuccess('Registration successful');
@@ -34,6 +37,7 @@ export default function RegisterPage() {
       const message = err.response?.data?.message || 'Registration failed';
       setError(message);
       showError(message);
+      setSubmitting(false);
     }
   }
 
@@ -85,7 +89,16 @@ export default function RegisterPage() {
             <input value={form.department} onChange={update('department')} />
           </label>
         )}
-        <button type="submit" className="btn-primary">Register</button>
+        <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
+          {submitting ? (
+            <>
+              <SparkleSpinner size={16} />
+              Registering…
+            </>
+          ) : (
+            'Register'
+          )}
+        </button>
         <p>
           Already have an account? <Link to="/login">Login here</Link>
         </p>
