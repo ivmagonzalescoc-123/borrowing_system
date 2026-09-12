@@ -1,9 +1,11 @@
 -- Library Borrowing System schema
 -- Import via phpMyAdmin (XAMPP) or:
---   mysql -u root -p < schema.sql
-
-CREATE DATABASE IF NOT EXISTS library_db;
-USE library_db;
+--   mysql -u root -p library_db < schema.sql
+--
+-- No CREATE DATABASE/USE here: migrate.js connects with the target
+-- database already selected (via DB_NAME), since hosted MySQL providers
+-- (Render, Clever Cloud, etc.) provision one fixed database per account and
+-- don't grant privileges to create or switch to another one.
 
 -- Staff and students both log in through this table.
 CREATE TABLE IF NOT EXISTS users (
