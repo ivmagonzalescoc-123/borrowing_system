@@ -9,7 +9,10 @@ const { notFound, errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
 
-app.use(cors());
+// FRONTEND_URL restricts CORS to your deployed frontend's origin. Leave it
+// unset (as in local dev) to allow any origin.
+const allowedOrigin = process.env.FRONTEND_URL;
+app.use(cors(allowedOrigin ? { origin: allowedOrigin } : {}));
 app.use(express.json());
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
