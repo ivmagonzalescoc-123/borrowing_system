@@ -35,10 +35,6 @@ CREATE TABLE IF NOT EXISTS books (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Adds cover_url to a books table created before this column existed; no-op
--- on a fresh install since CREATE TABLE above already includes it.
-ALTER TABLE books ADD COLUMN IF NOT EXISTS cover_url VARCHAR(500) DEFAULT NULL;
-
 -- Server-persisted notifications so a student sees updates (book handed over,
 -- book returned) made by staff in a different session, not just their own.
 CREATE TABLE IF NOT EXISTS notifications (
