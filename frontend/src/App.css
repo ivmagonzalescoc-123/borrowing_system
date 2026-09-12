@@ -407,9 +407,35 @@ button:disabled {
 /* Auth pages */
 .auth-page-wave {
   position: relative;
+  z-index: 0;
   height: 100vh;
   background: var(--gray-25);
   overflow: hidden;
+}
+
+.auth-hero-watermark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.1;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.auth-hero-sparkle {
+  position: absolute;
+  top: 14%;
+  left: 62%;
+  width: 56px;
+  height: 56px;
+  color: var(--yellow-500);
+  fill: var(--yellow-500);
+  transform: rotate(15deg);
+  filter: drop-shadow(0 0 10px rgba(242, 183, 5, 0.6));
+  z-index: 2;
+  pointer-events: none;
 }
 
 .auth-hero {
@@ -418,7 +444,7 @@ button:disabled {
   left: 0;
   width: 100%;
   height: clamp(300px, 44vh, 420px);
-  background: var(--green-700);
+  background: linear-gradient(45deg, var(--green-900) 0%, var(--green-600) 100%);
   overflow: hidden;
   z-index: 1;
 }
@@ -426,29 +452,71 @@ button:disabled {
 .auth-hero-brand {
   position: relative;
   z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 1.5rem 2rem;
+  padding: 1.75rem 2rem;
   color: white;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.auth-hero-brand svg {
-  color: var(--yellow-500);
+  font-family: 'Raleway', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  letter-spacing: 0.02em;
 }
 
 .auth-hero-wave {
   position: absolute;
-  bottom: -1px;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 90px;
+  height: 100%;
   display: block;
 }
 
 .auth-hero-wave path {
+  fill: var(--gray-25);
+}
+
+.auth-hero-green-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: clamp(220px, 30vh, 320px);
+  background: linear-gradient(135deg, var(--green-700) 0%, var(--green-900) 100%);
+  overflow: hidden;
+  z-index: 0;
+}
+
+.auth-hero-green-bottom-wave {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.auth-hero-green-bottom-wave path {
+  fill: var(--gray-25);
+}
+
+.auth-hero-yellow-trim {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: clamp(220px, 30vh, 320px);
+  overflow: hidden;
+  z-index: 1;
+}
+
+.auth-hero-yellow-trim-wave {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.auth-hero-yellow-wave path {
   fill: var(--gray-25);
 }
 

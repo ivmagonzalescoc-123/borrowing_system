@@ -1,20 +1,57 @@
-import { BookMarked } from 'lucide-react';
+import { Sparkle } from 'lucide-react';
 
 export default function AuthWaveHero() {
   return (
-    <div className="auth-hero">
-      <div className="auth-hero-brand">
-        <BookMarked size={24} strokeWidth={1.75} />
-        <span>COC Library</span>
-      </div>
-      <svg
-        className="auth-hero-wave"
-        viewBox="0 0 1440 110"
-        preserveAspectRatio="none"
+    <>
+      <img
+        className="auth-hero-watermark"
+        src="/assets/img/phinma-coc.png"
+        alt=""
         aria-hidden="true"
-      >
-        <path d="M0,60 C 240,25 480,25 720,60 C 960,95 1200,95 1440,60 L1440,110 L0,110 Z" />
-      </svg>
-    </div>
+      />
+      <Sparkle className="auth-hero-sparkle" aria-hidden="true" />
+      <div className="auth-hero">
+        <div className="auth-hero-brand">
+          <span>COC Library</span>
+        </div>
+        <svg
+          className="auth-hero-wave"
+          viewBox="0 0 1440 800"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d="M0,750 C 240,563 480,447 720,400 C 960,353 1200,237 1440,50 L1440,800 L0,800 Z" />
+        </svg>
+      </div>
+      <div className="auth-hero-green-bottom">
+        <svg
+          className="auth-hero-green-bottom-wave"
+          viewBox="0 0 1440 800"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d="M0,750 C 240,563 480,447 720,400 C 960,353 1200,237 1440,50 L1440,0 L0,0 Z" />
+        </svg>
+      </div>
+      <div className="auth-hero-yellow-trim">
+        <svg
+          className="auth-hero-yellow-trim-wave"
+          viewBox="0 0 1440 800"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="authHeroYellowTrim" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffdd33" />
+              <stop offset="100%" stopColor="#ffb800" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M0,710 C 240,523 480,407 720,360 C 960,313 1200,197 1440,10 L1440,90 C 1200,277 960,393 720,440 C 480,487 240,603 0,790 Z"
+            fill="url(#authHeroYellowTrim)"
+          />
+        </svg>
+      </div>
+    </>
   );
 }
