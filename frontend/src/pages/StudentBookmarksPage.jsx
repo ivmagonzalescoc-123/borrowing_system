@@ -52,7 +52,6 @@ export default function StudentBookmarksPage() {
       <div className="page-header">
         <div>
           <h1>Bookmarks</h1>
-          <p className="page-subtitle">Books you've saved for later.</p>
         </div>
       </div>
 

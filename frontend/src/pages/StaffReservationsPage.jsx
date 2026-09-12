@@ -43,7 +43,6 @@ export default function StaffReservationsPage() {
     <div className="page">
       <div className="page-header">
         <h1>Reservations</h1>
-        <p className="page-subtitle">Students waiting to pick up a reserved book at the counter.</p>
       </div>
 
       <div className="record-list">

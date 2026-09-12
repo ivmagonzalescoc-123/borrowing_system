@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import BottomNav from './components/BottomNav';
 import PortalWave from './components/PortalWave';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
@@ -104,6 +105,7 @@ export default function App() {
           </Routes>
         </main>
       </div>
+      {user && <BottomNav />}
     </div>
   );
 }

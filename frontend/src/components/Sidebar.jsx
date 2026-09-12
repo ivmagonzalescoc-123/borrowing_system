@@ -1,20 +1,8 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, ClipboardList, BookCheck, Bookmark, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const studentLinks = [
-  { to: '/student', label: 'Book References Catalog', icon: LayoutGrid, end: true },
-  { to: '/student/reservations', label: 'Reservations', icon: ClipboardList },
-  { to: '/student/borrowed', label: 'Borrowed Books', icon: BookCheck },
-  { to: '/student/bookmarks', label: 'Bookmarks', icon: Bookmark },
-];
-
-const staffLinks = [
-  { to: '/staff', label: 'Book References Catalog', icon: LayoutGrid, end: true },
-  { to: '/staff/reservations', label: 'Reservations', icon: ClipboardList },
-  { to: '/staff/borrowed', label: 'Borrowed Books', icon: BookCheck },
-];
+import { studentLinks, staffLinks } from '../nav-links';
 
 export default function Sidebar() {
   const { user } = useAuth();

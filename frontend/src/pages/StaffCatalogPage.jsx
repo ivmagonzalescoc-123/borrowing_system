@@ -104,7 +104,6 @@ export default function StaffCatalogPage() {
       <div className="page-header">
         <div>
           <h1>Book References Catalog</h1>
-          <p className="page-subtitle">Manage the library's book inventory.</p>
         </div>
         <button className="btn-primary btn-yellow" onClick={() => setShowAddModal(true)}>
           <Plus size={16} strokeWidth={1.75} />

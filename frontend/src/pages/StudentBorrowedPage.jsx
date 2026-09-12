@@ -15,7 +15,6 @@ export default function StudentBorrowedPage() {
     <div className="page">
       <div className="page-header">
         <h1>Borrowed Books</h1>
-        <p className="page-subtitle">Books currently in your hands, and your return history.</p>
       </div>
 
       <div className="record-list">

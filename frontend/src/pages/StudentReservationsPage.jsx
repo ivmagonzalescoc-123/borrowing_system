@@ -15,7 +15,6 @@ export default function StudentReservationsPage() {
     <div className="page">
       <div className="page-header">
         <h1>Reservations</h1>
-        <p className="page-subtitle">Books you've reserved that are awaiting pickup at the counter.</p>
       </div>
 
       <div className="record-list">

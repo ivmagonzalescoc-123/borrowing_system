@@ -37,7 +37,6 @@ export default function StaffBorrowedPage() {
     <div className="page">
       <div className="page-header">
         <h1>Borrowed Books</h1>
-        <p className="page-subtitle">Books currently checked out, and completed returns.</p>
       </div>
 
       <div className="record-list">
