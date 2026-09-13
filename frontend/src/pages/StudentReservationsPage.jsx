@@ -1,12 +1,28 @@
 import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import BorrowRecordRow from '../components/BorrowRecordRow';
+import RecordListSkeleton from '../components/RecordListSkeleton';
+import { EmptyState, ErrorState } from '../components/DataState';
 
 export default function StudentReservationsPage() {
   const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+
+  async function loadRecords() {
+    try {
+      const res = await api.get('/borrows/mine');
+      setRecords(res.data.records);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    api.get('/borrows/mine').then((res) => setRecords(res.data.records));
+    loadRecords();
   }, []);
 
   const reservations = records.filter((r) => r.status === 'reserved');
@@ -18,10 +34,18 @@ export default function StudentReservationsPage() {
       </div>
 
       <div className="record-list">
-        {reservations.map((record) => (
-          <BorrowRecordRow key={record.id} record={record} />
-        ))}
-        {reservations.length === 0 && <p className="empty-state">You have no pending reservations.</p>}
+        {loading ? (
+          <RecordListSkeleton />
+        ) : loadError ? (
+          <ErrorState onRetry={loadRecords} />
+        ) : (
+          <>
+            {reservations.map((record) => (
+              <BorrowRecordRow key={record.id} record={record} />
+            ))}
+            {reservations.length === 0 && <EmptyState message="You have no pending reservations." />}
+          </>
+        )}
       </div>
     </div>
   );

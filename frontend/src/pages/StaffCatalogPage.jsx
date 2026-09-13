@@ -5,10 +5,14 @@ import BookCatalogCard from '../components/BookCatalogCard';
 import BookDetailModal from '../components/BookDetailModal';
 import AddBookModal from '../components/AddBookModal';
 import BookSearchBar from '../components/BookSearchBar';
+import CatalogSkeleton from '../components/CatalogSkeleton';
+import { EmptyState, ErrorState } from '../components/DataState';
 import { useToast } from '../context/ToastContext';
 
 export default function StaffCatalogPage() {
   const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
@@ -20,8 +24,15 @@ export default function StaffCatalogPage() {
   const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
-    const res = await api.get('/books');
-    setBooks(res.data.books);
+    try {
+      const res = await api.get('/books');
+      setBooks(res.data.books);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -121,16 +132,24 @@ export default function StaffCatalogPage() {
 
       <div className="catalog-scroll-area">
         <div className="catalog-grid">
-          {filteredBooks.map((book) => (
-            <BookCatalogCard
-              key={book.id}
-              book={book}
-              onOpen={setSelectedBook}
-              onDelete={handleDeleteBook}
-              deleting={deletingId === book.id}
-            />
-          ))}
-          {filteredBooks.length === 0 && <p className="empty-state">No books match your search.</p>}
+          {loading ? (
+            <CatalogSkeleton />
+          ) : loadError ? (
+            <ErrorState onRetry={loadBooks} />
+          ) : (
+            <>
+              {filteredBooks.map((book) => (
+                <BookCatalogCard
+                  key={book.id}
+                  book={book}
+                  onOpen={setSelectedBook}
+                  onDelete={handleDeleteBook}
+                  deleting={deletingId === book.id}
+                />
+              ))}
+              {filteredBooks.length === 0 && <EmptyState message="No books match your search." />}
+            </>
+          )}
         </div>
       </div>
 

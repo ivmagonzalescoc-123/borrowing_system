@@ -4,11 +4,15 @@ import BookCatalogCard from '../components/BookCatalogCard';
 import BookDetailModal from '../components/BookDetailModal';
 import ReservationSuccessModal from '../components/ReservationSuccessModal';
 import BookSearchBar from '../components/BookSearchBar';
+import CatalogSkeleton from '../components/CatalogSkeleton';
+import { EmptyState, ErrorState } from '../components/DataState';
 import { useNotifications } from '../context/NotificationContext';
 import { useToast } from '../context/ToastContext';
 
 export default function StudentCatalogPage() {
   const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [reservationResult, setReservationResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -19,8 +23,15 @@ export default function StudentCatalogPage() {
   const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
-    const res = await api.get('/books');
-    setBooks(res.data.books);
+    try {
+      const res = await api.get('/books');
+      setBooks(res.data.books);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -82,17 +93,25 @@ export default function StudentCatalogPage() {
 
       <div className="catalog-scroll-area">
         <div className="catalog-grid">
-          {filteredBooks.map((book) => (
-            <BookCatalogCard
-              key={book.id}
-              book={book}
-              onOpen={(b) => {
-                setFormError('');
-                setSelectedBook(b);
-              }}
-            />
-          ))}
-          {filteredBooks.length === 0 && <p className="empty-state">No books match your search.</p>}
+          {loading ? (
+            <CatalogSkeleton />
+          ) : loadError ? (
+            <ErrorState onRetry={loadBooks} />
+          ) : (
+            <>
+              {filteredBooks.map((book) => (
+                <BookCatalogCard
+                  key={book.id}
+                  book={book}
+                  onOpen={(b) => {
+                    setFormError('');
+                    setSelectedBook(b);
+                  }}
+                />
+              ))}
+              {filteredBooks.length === 0 && <EmptyState message="No books match your search." />}
+            </>
+          )}
         </div>
       </div>
 

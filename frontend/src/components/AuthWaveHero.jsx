@@ -12,7 +12,17 @@ export default function AuthWaveHero() {
       <Sparkle className="auth-hero-sparkle" aria-hidden="true" />
       <div className="auth-hero">
         <div className="auth-hero-brand">
-          <span>COC Library</span>
+          <span className="auth-hero-title">
+            Phinma Cagayan de Oro College
+            {/* Mobile/tablet-portrait: sits inline right after the text. */}
+            <img
+              className="auth-hero-logo auth-hero-logo-inline"
+              src="/assets/img/no-bg-logo.png"
+              alt=""
+              aria-hidden="true"
+            />
+          </span>
+          <span className="auth-hero-subtitle">Library Borrowing System</span>
         </div>
         <svg
           className="auth-hero-wave"
@@ -23,6 +33,15 @@ export default function AuthWaveHero() {
           <path d="M0,750 C 240,563 480,447 720,400 C 960,353 1200,237 1440,50 L1440,800 L0,800 Z" />
         </svg>
       </div>
+      {/* Desktop/landscape-tablet: a bigger badge, positioned to sit behind the
+          login card so it never gets clipped by .auth-hero's own bounds and
+          never covers the form. */}
+      <img
+        className="auth-hero-logo auth-hero-logo-desktop"
+        src="/assets/img/no-bg-logo.png"
+        alt=""
+        aria-hidden="true"
+      />
       <div className="auth-hero-green-bottom">
         <svg
           className="auth-hero-green-bottom-wave"

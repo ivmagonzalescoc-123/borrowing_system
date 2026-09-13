@@ -2,18 +2,29 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import BorrowRecordRow from '../components/BorrowRecordRow';
 import HandoverModal from '../components/HandoverModal';
+import RecordListSkeleton from '../components/RecordListSkeleton';
+import { EmptyState, ErrorState } from '../components/DataState';
 import { useToast } from '../context/ToastContext';
 
 export default function StaffReservationsPage() {
   const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [handoverTarget, setHandoverTarget] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const { showSuccess, showError } = useToast();
 
   async function loadData() {
-    const res = await api.get('/borrows');
-    setRecords(res.data.records);
+    try {
+      const res = await api.get('/borrows');
+      setRecords(res.data.records);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -50,25 +61,33 @@ export default function StaffReservationsPage() {
       </div>
 
       <div className="record-list">
-        {reservations.map((record) => (
-          <BorrowRecordRow
-            key={record.id}
-            record={record}
-            showStudent
-            action={
-              <button
-                className="btn-primary"
-                onClick={() => {
-                  setFormError('');
-                  setHandoverTarget(record);
-                }}
-              >
-                Hand Over
-              </button>
-            }
-          />
-        ))}
-        {reservations.length === 0 && <p className="empty-state">No pending reservations.</p>}
+        {loading ? (
+          <RecordListSkeleton />
+        ) : loadError ? (
+          <ErrorState onRetry={loadData} />
+        ) : (
+          <>
+            {reservations.map((record) => (
+              <BorrowRecordRow
+                key={record.id}
+                record={record}
+                showStudent
+                action={
+                  <button
+                    className="btn-primary"
+                    onClick={() => {
+                      setFormError('');
+                      setHandoverTarget(record);
+                    }}
+                  >
+                    Hand Over
+                  </button>
+                }
+              />
+            ))}
+            {reservations.length === 0 && <EmptyState message="No pending reservations." />}
+          </>
+        )}
       </div>
 
       {handoverTarget && (

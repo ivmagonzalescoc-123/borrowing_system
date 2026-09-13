@@ -2,16 +2,27 @@ import { useEffect, useState } from 'react';
 import api from '../api/axios';
 import BorrowRecordRow from '../components/BorrowRecordRow';
 import SparkleSpinner from '../components/SparkleSpinner';
+import RecordListSkeleton from '../components/RecordListSkeleton';
+import { EmptyState, ErrorState } from '../components/DataState';
 import { useToast } from '../context/ToastContext';
 
 export default function StaffBorrowedPage() {
   const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [returningId, setReturningId] = useState(null);
   const { showSuccess, showError } = useToast();
 
   async function loadData() {
-    const res = await api.get('/borrows');
-    setRecords(res.data.records);
+    try {
+      const res = await api.get('/borrows');
+      setRecords(res.data.records);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -40,32 +51,40 @@ export default function StaffBorrowedPage() {
       </div>
 
       <div className="record-list">
-        {borrowed.map((record) => (
-          <BorrowRecordRow
-            key={record.id}
-            record={record}
-            showStudent
-            action={
-              record.status === 'borrowed' && (
-                <button
-                  className={`btn-primary${returningId === record.id ? ' is-loading' : ''}`}
-                  disabled={returningId === record.id}
-                  onClick={() => handleMarkReturned(record.id)}
-                >
-                  {returningId === record.id ? (
-                    <>
-                      <SparkleSpinner size={16} />
-                      Returning…
-                    </>
-                  ) : (
-                    'Mark Returned'
-                  )}
-                </button>
-              )
-            }
-          />
-        ))}
-        {borrowed.length === 0 && <p className="empty-state">No borrowed books yet.</p>}
+        {loading ? (
+          <RecordListSkeleton />
+        ) : loadError ? (
+          <ErrorState onRetry={loadData} />
+        ) : (
+          <>
+            {borrowed.map((record) => (
+              <BorrowRecordRow
+                key={record.id}
+                record={record}
+                showStudent
+                action={
+                  record.status === 'borrowed' && (
+                    <button
+                      className={`btn-primary${returningId === record.id ? ' is-loading' : ''}`}
+                      disabled={returningId === record.id}
+                      onClick={() => handleMarkReturned(record.id)}
+                    >
+                      {returningId === record.id ? (
+                        <>
+                          <SparkleSpinner size={16} />
+                          Returning…
+                        </>
+                      ) : (
+                        'Mark Returned'
+                      )}
+                    </button>
+                  )
+                }
+              />
+            ))}
+            {borrowed.length === 0 && <EmptyState message="No borrowed books yet." />}
+          </>
+        )}
       </div>
     </div>
   );

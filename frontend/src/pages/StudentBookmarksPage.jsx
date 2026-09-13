@@ -3,12 +3,16 @@ import api from '../api/axios';
 import BookCatalogCard from '../components/BookCatalogCard';
 import BookDetailModal from '../components/BookDetailModal';
 import ReservationSuccessModal from '../components/ReservationSuccessModal';
+import CatalogSkeleton from '../components/CatalogSkeleton';
+import { EmptyState, ErrorState } from '../components/DataState';
 import { useBookmarks } from '../context/BookmarkContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useToast } from '../context/ToastContext';
 
 export default function StudentBookmarksPage() {
   const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
   const [reservationResult, setReservationResult] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -18,8 +22,15 @@ export default function StudentBookmarksPage() {
   const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
-    const res = await api.get('/books');
-    setBooks(res.data.books);
+    try {
+      const res = await api.get('/books');
+      setBooks(res.data.books);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
@@ -58,18 +69,26 @@ export default function StudentBookmarksPage() {
       </div>
 
       <div className="catalog-grid">
-        {bookmarkedBooks.map((book) => (
-          <BookCatalogCard
-            key={book.id}
-            book={book}
-            onOpen={(b) => {
-              setFormError('');
-              setSelectedBook(b);
-            }}
-          />
-        ))}
-        {bookmarkedBooks.length === 0 && (
-          <p className="empty-state">You haven't bookmarked any books yet.</p>
+        {loading ? (
+          <CatalogSkeleton />
+        ) : loadError ? (
+          <ErrorState onRetry={loadBooks} />
+        ) : (
+          <>
+            {bookmarkedBooks.map((book) => (
+              <BookCatalogCard
+                key={book.id}
+                book={book}
+                onOpen={(b) => {
+                  setFormError('');
+                  setSelectedBook(b);
+                }}
+              />
+            ))}
+            {bookmarkedBooks.length === 0 && (
+              <EmptyState message="You haven't bookmarked any books yet." />
+            )}
+          </>
         )}
       </div>
 
