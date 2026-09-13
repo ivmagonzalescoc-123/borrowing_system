@@ -7,14 +7,59 @@ const bookRoutes = require('./routes/book.routes');
 const borrowRoutes = require('./routes/borrow.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const { notFound, errorHandler } = require('./middleware/error.middleware');
+const { securityHeaders, enforceHttps, sanitizeInput } = require('./middleware/security.middleware');
+const { generalLimiter, generalSlowDown } = require('./middleware/rateLimit.middleware');
 
 const app = express();
 
-// FRONTEND_URL restricts CORS to your deployed frontend's origin. Leave it
-// unset (as in local dev) to allow any origin.
-const allowedOrigin = process.env.FRONTEND_URL;
-app.use(cors(allowedOrigin ? { origin: allowedOrigin } : {}));
-app.use(express.json());
+// Required so req.secure / req.ip reflect the original client, not the
+// reverse proxy (Render, Railway, Cloudflare, nginx, ...) sitting in front
+// of this app in production — both HTTPS enforcement and rate limiting
+// depend on seeing the real client.
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+app.use(enforceHttps);
+app.use(securityHeaders);
+
+// FRONTEND_URL restricts CORS to your deployed frontend's origin(s) — a
+// comma-separated list, e.g. "https://app.example.com,https://admin.example.com".
+// Never falls back to "*": with `*` any website on the internet can drive
+// authenticated requests against this API from a visitor's browser.
+const allowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (allowedOrigins.length === 0) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('FRONTEND_URL must be set in production to configure CORS (no wildcard origin is allowed).');
+  }
+  console.warn('FRONTEND_URL is not set — allowing http://localhost:5173 for local frontend dev only.');
+  allowedOrigins.push('http://localhost:5173');
+}
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Same-origin requests, curl, health checks, etc. carry no Origin header.
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+    credentials: false, // auth uses a Bearer token, never cookies — no credentialed CORS needed
+    maxAge: 600,
+  })
+);
+
+// Caps request body size (defense-in-depth against oversized-payload DoS)
+// and applies baseline rate limiting/slow-down to every route below.
+app.use(express.json({ limit: '1mb' }));
+app.use(generalLimiter);
+app.use(generalSlowDown);
+app.use(sanitizeInput);
 
 // Staff-uploaded book cover images (see book.routes.js POST /books/upload-cover).
 // Note: on hosts with an ephemeral filesystem (e.g. Render's free tier), these

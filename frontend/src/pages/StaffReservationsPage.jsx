@@ -24,7 +24,11 @@ export default function StaffReservationsPage() {
     setSubmitting(true);
     setFormError('');
     try {
-      await api.patch(`/borrows/${handoverTarget.id}/handover`);
+      await api.patch(
+        `/borrows/${handoverTarget.id}/handover`,
+        {},
+        { headers: { 'Idempotency-Key': crypto.randomUUID() } }
+      );
       showSuccess('Book handed over successfully');
       setHandoverTarget(null);
       loadData();

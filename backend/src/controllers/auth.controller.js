@@ -8,10 +8,15 @@ function sanitizeUser(user) {
   return safe;
 }
 
-// No SMTP is configured for this demo, so OTPs live in memory and are handed
-// straight back to the caller instead of being emailed.
+// No SMTP is configured for this demo, so OTPs live in memory and — in
+// non-production only — are handed straight back to the caller instead of
+// being emailed. In production this would be a serious auth bypass (anyone
+// who knows an account's email could reset its password without ever
+// receiving the OTP), so real email delivery must be wired up before
+// deploying this behind NODE_ENV=production.
 const otpStore = new Map(); // email -> { otp, expiresAt }
 const OTP_TTL_MS = 5 * 60 * 1000;
+const BCRYPT_SALT_ROUNDS = 12;
 
 function generateOtp() {
   return crypto.randomInt(100000, 999999).toString();
@@ -33,7 +38,7 @@ async function register(req, res, next) {
       return res.status(409).json({ message: 'Email already registered' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
     const user = await UserModel.create({
       idNumber,
       fullName,
@@ -100,8 +105,12 @@ async function forgotPassword(req, res, next) {
     const otp = generateOtp();
     otpStore.set(email, { otp, expiresAt: Date.now() + OTP_TTL_MS });
 
-    // Demo mode: no SMTP configured, so the OTP is returned directly so the
-    // frontend can auto-fill it instead of it being emailed.
+    // Demo mode only: no SMTP configured, so the OTP is returned directly so
+    // the frontend can auto-fill it instead of it being emailed. Never do
+    // this in production — see the comment on otpStore above.
+    if (process.env.NODE_ENV === 'production') {
+      return res.json({ message: 'If that email is registered, an OTP has been sent to it.' });
+    }
     res.json({ message: 'OTP generated', otp });
   } catch (err) {
     next(err);
@@ -125,7 +134,7 @@ async function resetPassword(req, res, next) {
       return res.status(404).json({ message: 'No account found with that email' });
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await bcrypt.hash(newPassword, BCRYPT_SALT_ROUNDS);
     await UserModel.updatePassword(user.id, passwordHash);
     otpStore.delete(email);
 

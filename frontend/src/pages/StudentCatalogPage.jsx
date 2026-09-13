@@ -49,7 +49,9 @@ export default function StudentCatalogPage() {
     setSubmitting(true);
     setFormError('');
     try {
-      const res = await api.post('/borrows', payload);
+      const res = await api.post('/borrows', payload, {
+        headers: { 'Idempotency-Key': crypto.randomUUID() },
+      });
       setSelectedBook(null);
       setReservationResult(res.data.record);
       addNotification(`You have successfully reserved "${res.data.record.book_title}".`);

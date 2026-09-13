@@ -48,8 +48,8 @@ export default function ForgotPasswordModal({ onClose }) {
       setError('OTP is required.');
       return;
     }
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      setError('Password must be at least 8 characters and include both letters and numbers.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -137,7 +137,7 @@ export default function ForgotPasswordModal({ onClose }) {
                     id="new-password"
                     type="password"
                     autoComplete="off"
-                    placeholder="At least 6 characters"
+                    placeholder="At least 8 characters, with letters and numbers"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                   />

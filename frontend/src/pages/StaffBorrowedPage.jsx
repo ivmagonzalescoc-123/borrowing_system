@@ -21,7 +21,7 @@ export default function StaffBorrowedPage() {
   async function handleMarkReturned(id) {
     setReturningId(id);
     try {
-      await api.patch(`/borrows/${id}/return`);
+      await api.patch(`/borrows/${id}/return`, {}, { headers: { 'Idempotency-Key': crypto.randomUUID() } });
       showSuccess('Book marked as returned');
       loadData();
     } catch (err) {
