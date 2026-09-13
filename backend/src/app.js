@@ -29,7 +29,7 @@ app.use(securityHeaders);
 // authenticated requests against this API from a visitor's browser.
 const allowedOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
-  .map((origin) => origin.trim().replace(/\/+$/, '')) // browsers send Origin without a trailing slash
+  .map((origin) => origin.trim().replace(/^["']|["']$/g, '').replace(/\/+$/, '')) // tolerate stray quotes/trailing slash from pasting into a dashboard
   .filter(Boolean);
 
 if (allowedOrigins.length === 0) {
@@ -40,11 +40,24 @@ if (allowedOrigins.length === 0) {
   allowedOrigins.push('http://localhost:5173');
 }
 
+// Optional: also allow Vercel's per-deployment preview URLs (a random hash
+// per push, e.g. https://borrowing-system-5gew8rl6a-<team-slug>.vercel.app),
+// which are otherwise a different origin every time and would never match
+// FRONTEND_URL. Scoped to your own Vercel team/account via the suffix below
+// so this doesn't open the API up to arbitrary vercel.app sites.
+const previewSuffix = (process.env.VERCEL_PREVIEW_ORIGIN_SUFFIX || '').trim().replace(/^["']|["']$/g, '');
+const previewOriginPattern = previewSuffix
+  ? new RegExp(`^https://[a-z0-9-]+-${previewSuffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i')
+  : null;
+
 app.use(
   cors({
     origin(origin, callback) {
       // Same-origin requests, curl, health checks, etc. carry no Origin header.
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (!origin || allowedOrigins.includes(origin) || previewOriginPattern?.test(origin)) {
+        return callback(null, true);
+      }
+      console.warn(`CORS rejected origin "${origin}" — allowed: ${allowedOrigins.join(', ')}`);
       return callback(new Error('Not allowed by CORS'));
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
