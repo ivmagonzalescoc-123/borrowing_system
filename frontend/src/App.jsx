@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import PortalWave from './components/PortalWave';
+import AppWatermark from './components/AppWatermark';
 import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -44,6 +45,7 @@ export default function App() {
         {user && <Sidebar />}
         <main className="app-content">
           <PortalWave />
+          <AppWatermark />
           <Routes>
             <Route path="/" element={<HomeRedirect />} />
             <Route

@@ -81,6 +81,24 @@ a {
   );
 }
 
+/* Big, faint brand watermark behind every staff/student page. Tied with
+   .portal-wave at z-index:0 but declared after it in the DOM (see App.jsx),
+   so it paints above the green fade — while every page's actual content
+   sits in .page at z-index:1, always on top so the watermark never covers
+   real data (cards/rows have their own opaque background regardless). */
+.app-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(64vw, 50vh, 620px);
+  height: auto;
+  max-height: 50vh;
+  opacity: 0.05;
+  z-index: 0;
+  pointer-events: none;
+}
+
 /* Navbar */
 .navbar {
   display: flex;
