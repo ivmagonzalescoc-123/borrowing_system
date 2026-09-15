@@ -4,6 +4,7 @@ import BorrowRecordRow from '../components/BorrowRecordRow';
 import SparkleSpinner from '../components/SparkleSpinner';
 import RecordListSkeleton from '../components/RecordListSkeleton';
 import { EmptyState, ErrorState } from '../components/DataState';
+import ConfirmModal from '../components/ConfirmModal';
 import { useToast } from '../context/ToastContext';
 
 export default function StaffBorrowedPage() {
@@ -11,6 +12,7 @@ export default function StaffBorrowedPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [returningId, setReturningId] = useState(null);
+  const [confirmRecord, setConfirmRecord] = useState(null);
   const { showSuccess, showError } = useToast();
 
   async function loadData() {
@@ -39,6 +41,7 @@ export default function StaffBorrowedPage() {
       showError(err.response?.data?.message || 'Failed to mark book as returned');
     } finally {
       setReturningId(null);
+      setConfirmRecord(null);
     }
   }
 
@@ -67,7 +70,7 @@ export default function StaffBorrowedPage() {
                     <button
                       className={`btn-primary${returningId === record.id ? ' is-loading' : ''}`}
                       disabled={returningId === record.id}
-                      onClick={() => handleMarkReturned(record.id)}
+                      onClick={() => setConfirmRecord(record)}
                     >
                       {returningId === record.id ? (
                         <>
@@ -86,6 +89,17 @@ export default function StaffBorrowedPage() {
           </>
         )}
       </div>
+
+      {confirmRecord && (
+        <ConfirmModal
+          title="Mark Book as Returned?"
+          message={`Confirm that "${confirmRecord.book_title}" borrowed by ${confirmRecord.student_name} has been returned. This cannot be undone.`}
+          confirmLabel="Mark Returned"
+          submitting={returningId === confirmRecord.id}
+          onConfirm={() => handleMarkReturned(confirmRecord.id)}
+          onClose={() => setConfirmRecord(null)}
+        />
+      )}
     </div>
   );
 }
