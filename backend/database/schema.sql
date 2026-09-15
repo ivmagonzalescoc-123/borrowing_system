@@ -78,6 +78,24 @@ INSERT INTO users (id_number, full_name, email, password_hash, role, course)
 VALUES ('02-2324-12345', 'Juan Dela Cruz', 'student@example.com', '$2a$10$Lcal717CrrxthoqzRsc56Ons7XaGFnPyTVJt89zoAgjL.pVHRvxAG', 'student', 'BSIT')
 ON DUPLICATE KEY UPDATE id_number = id_number;
 
+-- This library is reference-only: drop the old fiction/fantasy sample data
+-- that earlier versions of this file seeded. Safe to run on every startup —
+-- deleting rows that no longer exist (already-cleaned databases) is a no-op.
+DELETE FROM books WHERE isbn IN (
+  '9780451524935', -- 1984
+  '9780061120084', -- To Kill a Mockingbird
+  '9780743273565', -- The Great Gatsby
+  '9780141439518', -- Pride and Prejudice
+  '9780316769488', -- The Catcher in the Rye
+  '9780060850524', -- Brave New World
+  '9780547928227', -- The Hobbit
+  '9781451673319', -- Fahrenheit 451
+  '9780451526342', -- Animal Farm
+  '9780142437247', -- Moby-Dick
+  '9780141441146', -- Jane Eyre
+  '9780141439471'  -- Frankenstein
+);
+
 INSERT INTO books (title, author, isbn, category, publisher, published_date, description, cover_url, total_copies, available_copies) VALUES
 ('Clean Code', 'Robert C. Martin', '9780132350884', 'Software Engineering', 'Prentice Hall', '2008-08-01',
  'A handbook of agile software craftsmanship that teaches how to write readable, maintainable code through practical examples and case studies.',
