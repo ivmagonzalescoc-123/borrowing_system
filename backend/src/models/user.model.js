@@ -38,6 +38,13 @@ const UserModel = {
     );
     return rows;
   },
+
+  async findAllStaff() {
+    const [rows] = await db.query(
+      "SELECT id, id_number, full_name, email, created_at FROM users WHERE role = 'staff' ORDER BY full_name"
+    );
+    return rows;
+  },
 };
 
 module.exports = UserModel;

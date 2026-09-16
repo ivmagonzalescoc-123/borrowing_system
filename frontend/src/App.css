@@ -353,25 +353,63 @@ a {
   color: var(--gray-500);
 }
 
+.avatar-initials {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .profile-panel {
-  min-width: 220px;
+  min-width: 250px;
 }
 
 .profile-info {
-  padding: 0.9rem 1rem;
+  padding: 1rem;
   display: flex;
-  flex-direction: column;
+  gap: 0.7rem;
+  align-items: flex-start;
   border-bottom: 1px solid var(--gray-100);
 }
 
-.profile-info strong {
+.profile-avatar-lg {
+  flex-shrink: 0;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: var(--green-700);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.9rem;
+  font-weight: 700;
 }
 
-.profile-info span {
-  font-size: 0.78rem;
-  color: var(--gray-500);
+.profile-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
 }
+
+.profile-text strong {
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--gray-500);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 
 .dropdown-action {
   display: flex;

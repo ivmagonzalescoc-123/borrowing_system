@@ -1,6 +1,7 @@
 const BorrowModel = require('../models/borrow.model');
 const BookModel = require('../models/book.model');
 const NotificationModel = require('../models/notification.model');
+const UserModel = require('../models/user.model');
 
 const DEFAULT_LOAN_DAYS = 7;
 
@@ -34,6 +35,17 @@ async function reserveBook(req, res, next) {
       requestTime,
     });
     await BookModel.decrementAvailable(bookId);
+
+    const [student, staff] = await Promise.all([UserModel.findById(studentId), UserModel.findAllStaff()]);
+    await Promise.all(
+      staff.map((member) =>
+        NotificationModel.create({
+          userId: member.id,
+          message: `${student.full_name} reserved "${book.title}".`,
+        })
+      )
+    );
+
     res.status(201).json({ record });
   } catch (err) {
     next(err);
