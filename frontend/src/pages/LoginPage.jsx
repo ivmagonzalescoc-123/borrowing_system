@@ -158,6 +158,8 @@ export default function LoginPage() {
 
       {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
       {showGoogleModal && <GoogleLoginModal onClose={() => setShowGoogleModal(false)} />}
+
+      <p className="auth-copyright">&copy; Group4 Cabahug-Gonzales-Sabellina-Sale</p>
     </div>
   );
 }
