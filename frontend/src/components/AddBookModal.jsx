@@ -108,7 +108,7 @@ export default function AddBookModal({ onClose, onSubmit, submitting, error, boo
             <div className="cover-input-row">
               <input
                 type="text"
-                placeholder="Paste an image URL…"
+                placeholder="Paste an image URL… (recommended)"
                 value={form.coverUrl}
                 onChange={update('coverUrl')}
                 disabled={uploading}
@@ -126,6 +126,9 @@ export default function AddBookModal({ onClose, onSubmit, submitting, error, boo
                 />
               </label>
             </div>
+            <p className="field-hint">
+              Our database's free tier caps stored files at 10MB, so uploaded photos may fail once space runs low. Using an Image URL is recommended.
+            </p>
             {uploadError && <p className="field-error">{uploadError}</p>}
             {form.coverUrl && (
               <div className="cover-preview">
