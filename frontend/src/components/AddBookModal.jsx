@@ -105,36 +105,43 @@ export default function AddBookModal({ onClose, onSubmit, submitting, error, boo
           </div>
           <label>
             Cover Image
-            <div className="cover-input-row">
-              <input
-                type="text"
-                placeholder="Paste an image URL… (recommended)"
-                value={form.coverUrl}
-                onChange={update('coverUrl')}
-                disabled={uploading}
-              />
-              <span className="cover-input-divider">or</span>
-              <label className={`btn-ghost cover-upload-button${uploading ? ' is-loading' : ''}`}>
-                {uploading ? <SparkleSpinner size={14} /> : <ImagePlus size={14} strokeWidth={1.75} />}
-                {uploading ? 'Uploading…' : 'Upload Photo'}
+            <div className="cover-field">
+              {form.coverUrl && (
+                <div className="cover-preview">
+                  <img src={form.coverUrl} alt="Cover preview" />
+                  <button
+                    type="button"
+                    className="cover-preview-remove"
+                    onClick={() => setForm((prev) => ({ ...prev, coverUrl: '' }))}
+                    aria-label="Remove cover image"
+                  >
+                    <X size={13} strokeWidth={2} />
+                  </button>
+                </div>
+              )}
+              <div className="cover-input-row">
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
+                  type="text"
+                  placeholder="Paste an image URL…"
+                  value={form.coverUrl}
+                  onChange={update('coverUrl')}
                   disabled={uploading}
-                  hidden
                 />
-              </label>
-            </div>
-            <p className="field-hint">
-              Our database's free tier caps stored files at 10MB, so uploaded photos may fail once space runs low. Using an Image URL is recommended.
-            </p>
-            {uploadError && <p className="field-error">{uploadError}</p>}
-            {form.coverUrl && (
-              <div className="cover-preview">
-                <img src={form.coverUrl} alt="Cover preview" />
+                <span className="cover-input-divider">or</span>
+                <label className={`btn-ghost cover-upload-button${uploading ? ' is-loading' : ''}`}>
+                  {uploading ? <SparkleSpinner size={14} /> : <ImagePlus size={14} strokeWidth={1.75} />}
+                  {uploading ? 'Uploading…' : 'Upload Photo'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={uploading}
+                    hidden
+                  />
+                </label>
               </div>
-            )}
+            </div>
+            {uploadError && <p className="field-error">{uploadError}</p>}
           </label>
           <label>
             Total Copies
