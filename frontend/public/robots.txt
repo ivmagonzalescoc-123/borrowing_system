@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /login
+Allow: /register
+# Signed-in portals: nothing for crawlers to see behind the login redirect.
+Disallow: /student
+Disallow: /staff

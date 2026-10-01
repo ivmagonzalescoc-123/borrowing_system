@@ -38,7 +38,7 @@ export default function HandoverModal({ record, policy, onClose, onConfirm, subm
 
   return (
     <Modal onClose={onClose} label="Hand over book">
-      <h4 className="section-title">Hand Over Book</h4>
+      <h2 className="section-title">Hand Over Book</h2>
       <p className="modal-title">{record.book_title}</p>
       <p className="modal-subtitle">
         {record.student_name} ({record.student_id_number})

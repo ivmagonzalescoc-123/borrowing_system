@@ -14,7 +14,7 @@ export default function AuthWaveHero() {
         {/* Mobile/tablet-portrait copy: inside .auth-hero so it can sit
             behind the brand text instead of on top of it. */}
         <Sparkle className="auth-hero-sparkle auth-hero-sparkle-inline" aria-hidden="true" />
-        <div className="auth-hero-brand">
+        <h1 className="auth-hero-brand">
           <span className="auth-hero-title">
             Phinma Cagayan de Oro College
             {/* Mobile/tablet-portrait: sits inline right after the text. */}
@@ -24,9 +24,9 @@ export default function AuthWaveHero() {
               alt=""
               aria-hidden="true"
             />
-          </span>
+          </span>{' '}
           <span className="auth-hero-subtitle">Library Borrowing System Prototype</span>
-        </div>
+        </h1>
         <svg
           className="auth-hero-wave"
           viewBox="0 0 1440 800"

@@ -16,7 +16,7 @@ export default function ReasonModal({ title, subtitle, confirmLabel, submitting,
 
   return (
     <Modal onClose={onClose} label={title}>
-      <h4 className="section-title">{title}</h4>
+      <h2 className="section-title">{title}</h2>
       {subtitle && <p className="modal-subtitle">{subtitle}</p>}
 
       <form className="reservation-form" onSubmit={handleSubmit}>

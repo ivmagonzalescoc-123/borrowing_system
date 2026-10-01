@@ -66,7 +66,7 @@ export default function AddBookModal({ onClose, onSubmit, submitting, error, boo
 
   return (
     <Modal onClose={onClose} className="modal-card-wide" label={isEditing ? 'Edit book' : 'Add a book'}>
-      <h4 className="section-title">{isEditing ? 'Edit Book' : 'Add a Book'}</h4>
+      <h2 className="section-title">{isEditing ? 'Edit Book' : 'Add a Book'}</h2>
 
       <form className="reservation-form" onSubmit={handleSubmit}>
         <div className="reservation-form-row">

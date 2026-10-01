@@ -14,14 +14,14 @@ export default function StudentRecordsModal({ student, records, onClose }) {
 
   return (
     <Modal onClose={onClose} className="modal-card-wide" label={student.full_name}>
-      <p className="modal-title">{student.full_name}</p>
+      <h2 className="modal-title">{student.full_name}</h2>
       <p className="modal-subtitle">
         {student.id_number}
         {student.course && ` · ${student.course}`}
         {student.email && ` · ${student.email}`}
       </p>
 
-      <h4 className="section-title">Current ({active.length})</h4>
+      <h3 className="section-title">Current ({active.length})</h3>
       <div className="record-list is-compact">
         {active.map((record) => (
           <BorrowRecordRow key={record.id} record={record} />

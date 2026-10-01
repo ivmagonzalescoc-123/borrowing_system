@@ -44,7 +44,7 @@ export default function AddStaffModal({ onClose, onCreated }) {
 
   return (
     <Modal onClose={onClose} label="Add staff account">
-      <h4 className="section-title">Add Staff Account</h4>
+      <h2 className="section-title">Add Staff Account</h2>
       <p className="modal-subtitle">They can sign in right away with this email and password.</p>
 
       <form className="reservation-form" onSubmit={handleSubmit}>

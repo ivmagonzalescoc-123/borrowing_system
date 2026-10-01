@@ -46,7 +46,7 @@ export default function BookCatalogCard({ book, onOpen, onArchive, archiving, sh
       </div>
       <div className="catalog-card-body">
         {book.category && <span className="catalog-card-tag">{book.category}</span>}
-        <h3 className="catalog-card-title">{book.title}</h3>
+        <h2 className="catalog-card-title">{book.title}</h2>
         <p className="catalog-card-author">{book.author}</p>
         <div className="catalog-card-availability">
           <span className={`availability-dot ${isAvailable ? 'is-available' : 'is-unavailable'}`} />

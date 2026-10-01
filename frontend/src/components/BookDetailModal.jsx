@@ -87,7 +87,7 @@ export default function BookDetailModal({
             </div>
             <div className="modal-meta-grid">
               <div>
-                <p className="modal-title">{book.title}</p>
+                <h2 className="modal-title">{book.title}</h2>
                 <p className="modal-subtitle">{book.author}</p>
                 {book.category && <span className="catalog-card-tag">{book.category}</span>}
               </div>
@@ -124,7 +124,7 @@ export default function BookDetailModal({
             </div>
           </div>
 
-          <h4 className="section-title">Description</h4>
+          <h3 className="section-title">Description</h3>
           <p className="modal-description">{book.description || 'No description available for this book.'}</p>
 
           {!readOnly && blocker && isAvailable && (
@@ -198,7 +198,7 @@ export default function BookDetailModal({
             <ArrowLeft size={16} strokeWidth={1.75} />
             Back to details
           </button>
-          <h4 className="section-title">Reservation Details</h4>
+          <h2 className="section-title">Reservation Details</h2>
           <p className="modal-subtitle">{book.title}</p>
 
           <form className="reservation-form" onSubmit={handleSubmit}>

@@ -69,7 +69,7 @@ export default function ArchivedBooksModal({ onClose, onRestored }) {
 
   return (
     <Modal onClose={onClose} className="modal-card-wide" label="Archived books">
-      <h4 className="section-title">Archived Books</h4>
+      <h2 className="section-title">Archived Books</h2>
       <p className="modal-subtitle">Hidden from the catalog, with all borrowing history kept.</p>
 
       {books.length > 5 && (

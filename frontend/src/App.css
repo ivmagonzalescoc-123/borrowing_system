@@ -800,6 +800,9 @@ button.is-loading:disabled {
 .auth-hero-brand {
   position: relative;
   z-index: 2;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
   padding: 1.75rem 2rem;
   color: white;
   display: flex;
@@ -2193,6 +2196,12 @@ a.btn-ghost {
   right: 0;
   height: 5px;
   background: linear-gradient(90deg, var(--green-700) 0%, var(--green-600) 55%, var(--yellow-500) 100%);
+}
+
+/* h2 for outline order; sized like the h4 it replaced. */
+.confirm-title {
+  margin: 1.33em 0;
+  font-size: 1rem;
 }
 
 .confirm-card.is-warning .confirm-title {

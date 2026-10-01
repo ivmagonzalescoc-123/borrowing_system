@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -19,7 +20,18 @@ import StaffStudentsPage from './pages/StaffStudentsPage';
 import StaffReservationsPage from './pages/StaffReservationsPage';
 import StaffBorrowedPage from './pages/StaffBorrowedPage';
 import { useAuth } from './context/AuthContext';
+import { studentLinks, staffLinks } from './nav-links';
 import './App.css';
+
+const SITE_NAME = 'COC Library Borrowing System Prototype';
+
+// Per-route <title>, so tabs, history and bookmarks say which page is open.
+const PAGE_TITLES = {
+  '/login': 'Login',
+  '/register': 'Student Registration',
+  ...Object.fromEntries(studentLinks.map((link) => [link.to, link.label])),
+  ...Object.fromEntries(staffLinks.map((link) => [link.to, `Staff ${link.label}`])),
+};
 
 function HomeRedirect() {
   const { user, loading } = useAuth();
@@ -32,6 +44,11 @@ export default function App() {
   const { user } = useAuth();
   const location = useLocation();
   const isAuthRoute = location.pathname === '/login' || location.pathname === '/register';
+
+  useEffect(() => {
+    const page = PAGE_TITLES[location.pathname.replace(/\/+$/, '') || '/'];
+    document.title = page ? `${page} | ${SITE_NAME}` : SITE_NAME;
+  }, [location.pathname]);
 
   if (isAuthRoute) {
     return (

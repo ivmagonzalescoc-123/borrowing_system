@@ -23,7 +23,7 @@ export default function ConfirmModal({
 
   return (
     <Modal onClose={submitting ? () => {} : onClose} className={`confirm-card is-${tone}`} label={title}>
-      <h4 className="confirm-title">{title}</h4>
+      <h2 className="confirm-title">{title}</h2>
       {message && <p className="confirm-message">{message}</p>}
       {details && (
         <div className="confirm-details">
