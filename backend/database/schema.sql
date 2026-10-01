@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS books (
   cover_url VARCHAR(500) DEFAULT NULL,
   total_copies INT NOT NULL DEFAULT 1,
   available_copies INT NOT NULL DEFAULT 1,
+  -- Set instead of deleting a book that has borrowing history, so past
+  -- records stay intact. Archived books are hidden from the catalog.
+  archived_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -41,13 +44,18 @@ CREATE TABLE IF NOT EXISTS notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   message VARCHAR(500) NOT NULL,
+  link VARCHAR(255) DEFAULT NULL,          -- in-app page the notification opens
   is_read TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_notifications_user_created (user_id, created_at)
 );
 
 -- Lifecycle: reserved (student requests) -> borrowed (staff hands the book
--- over) -> returned (staff receives the book back).
+-- over) -> returned (staff receives the book back). A reservation can also
+-- end as cancelled (by the student), rejected (by staff) or expired (not
+-- picked up by pickup_deadline). "Overdue" is not stored: it is a borrowed
+-- record whose due_date has passed.
 CREATE TABLE IF NOT EXISTS borrow_records (
   id INT AUTO_INCREMENT PRIMARY KEY,
   reference_no VARCHAR(20) NOT NULL UNIQUE,
@@ -58,14 +66,51 @@ CREATE TABLE IF NOT EXISTS borrow_records (
   request_start_date DATE DEFAULT NULL,
   request_end_date DATE DEFAULT NULL,
   request_time TIME DEFAULT NULL,
-  status ENUM('reserved', 'borrowed', 'returned') NOT NULL DEFAULT 'reserved',
+  status ENUM('reserved', 'borrowed', 'returned', 'cancelled', 'rejected', 'expired') NOT NULL DEFAULT 'reserved',
   reserved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  pickup_deadline DATE DEFAULT NULL,       -- reservation expires after this date
   borrowed_at TIMESTAMP NULL DEFAULT NULL,
   due_date DATE DEFAULT NULL,              -- set once the book is handed over
+  renewal_count INT NOT NULL DEFAULT 0,
   returned_at TIMESTAMP NULL DEFAULT NULL,
+  closed_at TIMESTAMP NULL DEFAULT NULL,   -- when cancelled/rejected/expired
+  close_reason VARCHAR(255) DEFAULT NULL,
+  due_soon_notified TINYINT(1) NOT NULL DEFAULT 0,
+  overdue_notified TINYINT(1) NOT NULL DEFAULT 0,
   FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
   FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (staff_id) REFERENCES users(id) ON DELETE SET NULL
+  FOREIGN KEY (staff_id) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_borrow_status (status),
+  INDEX idx_borrow_student_status (student_id, status),
+  INDEX idx_borrow_due_date (due_date)
+);
+
+CREATE TABLE IF NOT EXISTS bookmarks (
+  user_id INT NOT NULL,
+  book_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, book_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
+
+-- Students waiting for an unavailable book. Everyone on the list is notified
+-- (and removed) when a copy is freed.
+CREATE TABLE IF NOT EXISTS book_waitlist (
+  user_id INT NOT NULL,
+  book_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, book_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
+);
+
+-- One pending password-reset code per email. The code is stored hashed.
+CREATE TABLE IF NOT EXISTS password_resets (
+  email VARCHAR(150) PRIMARY KEY,
+  otp_hash CHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  attempts INT NOT NULL DEFAULT 0
 );
 
 -- Sample data (passwords are bcrypt hashes of "password123")

@@ -1,5 +1,5 @@
-import { X, AlertTriangle } from 'lucide-react';
-import Portal from './Portal';
+import { AlertTriangle } from 'lucide-react';
+import Modal from './Modal';
 import SparkleSpinner from './SparkleSpinner';
 
 export default function ConfirmModal({
@@ -7,37 +7,30 @@ export default function ConfirmModal({
   message,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
+  danger = false,
   submitting,
   onConfirm,
   onClose,
 }) {
   return (
-    <Portal>
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
-            <X size={18} strokeWidth={1.75} />
-          </button>
+    <Modal onClose={onClose} label={title}>
+      <AlertTriangle className={`confirm-modal-icon${danger ? ' is-danger' : ''}`} size={36} strokeWidth={1.5} />
+      <h4 className="section-title confirm-modal-title">{title}</h4>
+      <p className="modal-subtitle confirm-modal-message">{message}</p>
 
-          <AlertTriangle className="confirm-modal-icon" size={36} strokeWidth={1.5} />
-          <h4 className="section-title confirm-modal-title">{title}</h4>
-          <p className="modal-subtitle confirm-modal-message">{message}</p>
-
-          <div className="confirm-modal-actions">
-            <button type="button" className="btn-ghost" onClick={onClose} disabled={submitting}>
-              {cancelLabel}
-            </button>
-            <button
-              type="button"
-              className={`btn-primary${submitting ? ' is-loading' : ''}`}
-              onClick={onConfirm}
-              disabled={submitting}
-            >
-              {submitting ? <SparkleSpinner size={16} /> : confirmLabel}
-            </button>
-          </div>
-        </div>
+      <div className="confirm-modal-actions">
+        <button type="button" className="btn-ghost" onClick={onClose} disabled={submitting}>
+          {cancelLabel}
+        </button>
+        <button
+          type="button"
+          className={`${danger ? 'btn-danger' : 'btn-primary'}${submitting ? ' is-loading' : ''}`}
+          onClick={onConfirm}
+          disabled={submitting}
+        >
+          {submitting ? <SparkleSpinner size={16} /> : confirmLabel}
+        </button>
       </div>
-    </Portal>
+    </Modal>
   );
 }

@@ -16,7 +16,11 @@ export function AuthProvider({ children }) {
     api
       .get('/auth/me')
       .then((res) => setUser(res.data.user))
-      .catch(() => localStorage.removeItem('token'))
+      .catch((err) => {
+        // Only a rejected token means "signed out". A network blip or a
+        // rate-limited request shouldn't throw away a valid session.
+        if (err.response?.status === 401) localStorage.removeItem('token');
+      })
       .finally(() => setLoading(false));
   }, []);
 

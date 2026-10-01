@@ -11,9 +11,7 @@ export default function RegisterPage() {
     fullName: '',
     email: '',
     password: '',
-    role: 'student',
     course: '',
-    department: '',
   });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -30,9 +28,9 @@ export default function RegisterPage() {
     setError('');
     setSubmitting(true);
     try {
-      const user = await register(form);
+      await register(form);
       showSuccess('Registration successful');
-      navigate(user.role === 'staff' ? '/staff' : '/student');
+      navigate('/student');
     } catch (err) {
       const message = err.response?.data?.message || 'Registration failed';
       setError(message);
@@ -48,16 +46,10 @@ export default function RegisterPage() {
       <form className="auth-form" onSubmit={handleSubmit}>
         <h2>Register</h2>
         {error && <p className="error">{error}</p>}
+        <p className="auth-notice">Student sign-up. Library staff accounts are created by an existing librarian.</p>
         <label>
-          Role
-          <select value={form.role} onChange={update('role')}>
-            <option value="student">Student</option>
-            <option value="staff">Staff</option>
-          </select>
-        </label>
-        <label>
-          {form.role === 'staff' ? 'Staff ID' : 'Student ID'}
-          <input value={form.idNumber} onChange={update('idNumber')} required />
+          Student ID
+          <input value={form.idNumber} onChange={update('idNumber')} placeholder="e.g. 02-2324-12345" required />
         </label>
         <label>
           Full Name
@@ -75,20 +67,16 @@ export default function RegisterPage() {
             value={form.password}
             onChange={update('password')}
             required
-            minLength={6}
+            minLength={8}
+            pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}"
+            title="At least 8 characters, with letters and numbers"
           />
+          <span className="field-hint">At least 8 characters, with letters and numbers.</span>
         </label>
-        {form.role === 'student' ? (
-          <label>
-            Course
-            <input value={form.course} onChange={update('course')} />
-          </label>
-        ) : (
-          <label>
-            Department
-            <input value={form.department} onChange={update('department')} />
-          </label>
-        )}
+        <label>
+          Course
+          <input value={form.course} onChange={update('course')} placeholder="e.g. BSIT" />
+        </label>
         <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
           {submitting ? (
             <>

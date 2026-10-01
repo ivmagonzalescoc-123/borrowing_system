@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { register, login, me, forgotPassword, resetPassword } = require('../controllers/auth.controller');
-const { requireAuth } = require('../middleware/auth.middleware');
+const { register, createStaff, login, me, forgotPassword, resetPassword } = require('../controllers/auth.controller');
+const { requireAuth, requireRole } = require('../middleware/auth.middleware');
 const { authLimiter } = require('../middleware/rateLimit.middleware');
 const { validate } = require('../middleware/validate.middleware');
 
@@ -19,19 +19,17 @@ const strongPassword = body('password')
   .matches(/[0-9]/)
   .withMessage('Password must contain at least one number');
 
-router.post(
-  '/register',
-  authLimiter,
-  [
-    body('idNumber').isString().trim().notEmpty().withMessage('ID number is required'),
-    body('fullName').isString().trim().isLength({ min: 1, max: 150 }).withMessage('Full name is required'),
-    body('email').isEmail().withMessage('A valid email is required').normalizeEmail(),
-    body('role').isIn(['staff', 'student']).withMessage('Role must be staff or student'),
-    strongPassword,
-  ],
-  validate,
-  register
-);
+const accountFields = [
+  body('idNumber').isString().trim().isLength({ min: 1, max: 50 }).withMessage('ID number is required'),
+  body('fullName').isString().trim().isLength({ min: 1, max: 150 }).withMessage('Full name is required'),
+  body('email').isEmail().withMessage('A valid email is required').normalizeEmail(),
+  strongPassword,
+];
+
+// Self sign-up is student-only; the role is set server-side.
+router.post('/register', authLimiter, accountFields, validate, register);
+// Existing staff create other staff accounts.
+router.post('/staff', requireAuth, requireRole('staff'), accountFields, validate, createStaff);
 router.post(
   '/login',
   authLimiter,

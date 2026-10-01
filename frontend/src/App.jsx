@@ -5,13 +5,16 @@ import BottomNav from './components/BottomNav';
 import PortalWave from './components/PortalWave';
 import AppWatermark from './components/AppWatermark';
 import ProtectedRoute from './components/ProtectedRoute';
+import PageLoader from './components/PageLoader';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import StudentCatalogPage from './pages/StudentCatalogPage';
 import StudentReservationsPage from './pages/StudentReservationsPage';
 import StudentBorrowedPage from './pages/StudentBorrowedPage';
 import StudentBookmarksPage from './pages/StudentBookmarksPage';
+import StaffDashboardPage from './pages/StaffDashboardPage';
 import StaffCatalogPage from './pages/StaffCatalogPage';
+import StaffStudentsPage from './pages/StaffStudentsPage';
 import StaffReservationsPage from './pages/StaffReservationsPage';
 import StaffBorrowedPage from './pages/StaffBorrowedPage';
 import { useAuth } from './context/AuthContext';
@@ -19,7 +22,7 @@ import './App.css';
 
 function HomeRedirect() {
   const { user, loading } = useAuth();
-  if (loading) return <p>Loading...</p>;
+  if (loading) return <PageLoader />;
   if (!user) return <Navigate to="/login" replace />;
   return <Navigate to={user.role === 'staff' ? '/staff' : '/student'} replace />;
 }
@@ -84,7 +87,23 @@ export default function App() {
               path="/staff"
               element={
                 <ProtectedRoute roles={['staff']}>
+                  <StaffDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/staff/catalog"
+              element={
+                <ProtectedRoute roles={['staff']}>
                   <StaffCatalogPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/staff/students"
+              element={
+                <ProtectedRoute roles={['staff']}>
+                  <StaffStudentsPage />
                 </ProtectedRoute>
               }
             />
@@ -104,6 +123,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<HomeRedirect />} />
           </Routes>
         </main>
       </div>

@@ -30,15 +30,6 @@ export function NotificationProvider({ children }) {
     return () => clearInterval(interval);
   }, [user, loadNotifications]);
 
-  async function addNotification(message) {
-    try {
-      const res = await api.post('/notifications', { message });
-      setNotifications((prev) => [res.data.notification, ...prev]);
-    } catch {
-      // Best-effort: the notification is a nice-to-have, not critical to the action.
-    }
-  }
-
   async function markAllRead() {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: 1 })));
     try {
@@ -51,7 +42,7 @@ export function NotificationProvider({ children }) {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
-    <NotificationContext.Provider value={{ notifications, addNotification, markAllRead, unreadCount }}>
+    <NotificationContext.Provider value={{ notifications, markAllRead, unreadCount, reload: loadNotifications }}>
       {children}
     </NotificationContext.Provider>
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, ImagePlus } from 'lucide-react';
 import api from '../api/axios';
-import Portal from './Portal';
+import Modal from './Modal';
 import SparkleSpinner from './SparkleSpinner';
 
 const emptyBook = {
@@ -18,6 +18,7 @@ const emptyBook = {
 
 export default function AddBookModal({ onClose, onSubmit, submitting, error, book }) {
   const isEditing = Boolean(book);
+  const copiesOut = book ? Number(book.reserved_count || 0) + Number(book.borrowed_count || 0) : 0;
   const [form, setForm] = useState(() =>
     book
       ? {
@@ -64,116 +65,118 @@ export default function AddBookModal({ onClose, onSubmit, submitting, error, boo
   }
 
   return (
-    <Portal>
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-card modal-card-wide" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          <X size={18} strokeWidth={1.75} />
-        </button>
-        <h4 className="section-title">{isEditing ? 'Edit Book' : 'Add a Book'}</h4>
+    <Modal onClose={onClose} className="modal-card-wide" label={isEditing ? 'Edit book' : 'Add a book'}>
+      <h4 className="section-title">{isEditing ? 'Edit Book' : 'Add a Book'}</h4>
 
-        <form className="reservation-form" onSubmit={handleSubmit}>
-          <div className="reservation-form-row">
-            <label>
-              Title
-              <input value={form.title} onChange={update('title')} required />
-            </label>
-            <label>
-              Author
-              <input value={form.author} onChange={update('author')} required />
-            </label>
-          </div>
-          <div className="reservation-form-row">
-            <label>
-              ISBN
-              <input value={form.isbn} onChange={update('isbn')} />
-            </label>
-            <label>
-              Category
-              <input value={form.category} onChange={update('category')} />
-            </label>
-          </div>
-          <div className="reservation-form-row">
-            <label>
-              Publisher
-              <input value={form.publisher} onChange={update('publisher')} />
-            </label>
-            <label>
-              Date Released
-              <input type="date" value={form.publishedDate} onChange={update('publishedDate')} />
-            </label>
-          </div>
+      <form className="reservation-form" onSubmit={handleSubmit}>
+        <div className="reservation-form-row">
           <label>
-            Cover Image
-            <div className="cover-field">
-              {form.coverUrl && (
-                <div className="cover-preview">
-                  <img src={form.coverUrl} alt="Cover preview" />
-                  <button
-                    type="button"
-                    className="cover-preview-remove"
-                    onClick={() => setForm((prev) => ({ ...prev, coverUrl: '' }))}
-                    aria-label="Remove cover image"
-                  >
-                    <X size={13} strokeWidth={2} />
-                  </button>
-                </div>
-              )}
-              <div className="cover-input-row">
-                <input
-                  type="text"
-                  placeholder="Paste an image URL…"
-                  value={form.coverUrl}
-                  onChange={update('coverUrl')}
-                  disabled={uploading}
-                />
-                <span className="cover-input-divider">or</span>
-                <label className={`btn-ghost cover-upload-button${uploading ? ' is-loading' : ''}`}>
-                  {uploading ? <SparkleSpinner size={14} /> : <ImagePlus size={14} strokeWidth={1.75} />}
-                  {uploading ? 'Uploading…' : 'Upload Photo'}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    disabled={uploading}
-                    hidden
-                  />
-                </label>
+            Title
+            <input value={form.title} onChange={update('title')} required />
+          </label>
+          <label>
+            Author
+            <input value={form.author} onChange={update('author')} required />
+          </label>
+        </div>
+        <div className="reservation-form-row">
+          <label>
+            ISBN
+            <input value={form.isbn} onChange={update('isbn')} />
+          </label>
+          <label>
+            Category
+            <input value={form.category} onChange={update('category')} />
+          </label>
+        </div>
+        <div className="reservation-form-row">
+          <label>
+            Publisher
+            <input value={form.publisher} onChange={update('publisher')} />
+          </label>
+          <label>
+            Date Released
+            <input type="date" value={form.publishedDate} onChange={update('publishedDate')} />
+          </label>
+        </div>
+        <label>
+          Cover Image
+          <div className="cover-field">
+            {form.coverUrl && (
+              <div className="cover-preview">
+                <img src={form.coverUrl} alt="Cover preview" />
+                <button
+                  type="button"
+                  className="cover-preview-remove"
+                  onClick={() => setForm((prev) => ({ ...prev, coverUrl: '' }))}
+                  aria-label="Remove cover image"
+                >
+                  <X size={13} strokeWidth={2} />
+                </button>
               </div>
-            </div>
-            {uploadError && <p className="field-error">{uploadError}</p>}
-          </label>
-          <label>
-            Total Copies
-            <input type="number" min="1" value={form.totalCopies} onChange={update('totalCopies')} required />
-          </label>
-          {isEditing && (
-            <p className="field-hint">
-              Raising or lowering this adjusts available copies by the same amount.
-            </p>
-          )}
-          <label>
-            Description
-            <textarea rows={3} value={form.description} onChange={update('description')} />
-          </label>
-
-          {error && <p className="error">{error}</p>}
-
-          <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
-            {submitting ? (
-              <>
-                <SparkleSpinner size={16} />
-                Saving…
-              </>
-            ) : isEditing ? (
-              'Save Changes'
-            ) : (
-              'Save Book'
             )}
-          </button>
-        </form>
-      </div>
-    </div>
-    </Portal>
+            <div className="cover-input-row">
+              <input
+                type="text"
+                placeholder="Paste an image URL…"
+                value={form.coverUrl}
+                onChange={update('coverUrl')}
+                disabled={uploading}
+              />
+              <span className="cover-input-divider">or</span>
+              <label className={`btn-ghost cover-upload-button${uploading ? ' is-loading' : ''}`}>
+                {uploading ? <SparkleSpinner size={14} /> : <ImagePlus size={14} strokeWidth={1.75} />}
+                {uploading ? 'Uploading…' : 'Upload Photo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={uploading}
+                  hidden
+                />
+              </label>
+            </div>
+          </div>
+          {uploadError && <p className="field-error">{uploadError}</p>}
+        </label>
+        <label>
+          Total Copies
+          <input
+            type="number"
+            min={Math.max(1, copiesOut)}
+            max="999"
+            value={form.totalCopies}
+            onChange={update('totalCopies')}
+            required
+          />
+        </label>
+        {isEditing && (
+          <p className="field-hint">
+            {copiesOut > 0
+              ? `${copiesOut} ${copiesOut === 1 ? 'copy is' : 'copies are'} reserved or on loan, so the total can't go below ${copiesOut}.`
+              : 'Available copies follow the total automatically.'}
+          </p>
+        )}
+        <label>
+          Description
+          <textarea rows={3} value={form.description} onChange={update('description')} />
+        </label>
+
+        {error && <p className="error">{error}</p>}
+
+        <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
+          {submitting ? (
+            <>
+              <SparkleSpinner size={16} />
+              Saving…
+            </>
+          ) : isEditing ? (
+            'Save Changes'
+          ) : (
+            'Save Book'
+          )}
+        </button>
+      </form>
+    </Modal>
   );
 }

@@ -22,7 +22,7 @@ export default function AuthWaveHero() {
               aria-hidden="true"
             />
           </span>
-          <span className="auth-hero-subtitle">Library Borrowing System</span>
+          <span className="auth-hero-subtitle">Library Borrowing System Prototype</span>
         </div>
         <svg
           className="auth-hero-wave"

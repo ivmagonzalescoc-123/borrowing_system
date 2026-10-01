@@ -1,28 +1,29 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
 import BookCatalogCard from '../components/BookCatalogCard';
 import BookDetailModal from '../components/BookDetailModal';
 import ReservationSuccessModal from '../components/ReservationSuccessModal';
 import BookSearchBar from '../components/BookSearchBar';
 import CatalogSkeleton from '../components/CatalogSkeleton';
+import StudentSummary from '../components/StudentSummary';
 import { EmptyState, ErrorState } from '../components/DataState';
-import { useNotifications } from '../context/NotificationContext';
-import { useToast } from '../context/ToastContext';
+import useMyBorrows from '../hooks/useMyBorrows';
+import useReserveFlow from '../hooks/useReserveFlow';
+import { PAGE_SIZE, categoriesOf, filterBooks, sortBooks } from '../utils/catalog';
 
 export default function StudentCatalogPage() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [reservationResult, setReservationResult] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState('');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
-  const { addNotification } = useNotifications();
-  const { showSuccess, showError } = useToast();
+  const [sort, setSort] = useState('title');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mine = useMyBorrows();
 
-  async function loadBooks() {
+  const loadBooks = useCallback(async () => {
     try {
       const res = await api.get('/books');
       setBooks(res.data.books);
@@ -32,56 +33,52 @@ export default function StudentCatalogPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     loadBooks();
-  }, []);
+  }, [loadBooks]);
 
-  const categories = useMemo(
-    () => [...new Set(books.map((b) => b.category).filter(Boolean))],
-    [books]
+  const reserve = useReserveFlow({
+    onChanged: () => {
+      loadBooks();
+      mine.reload();
+    },
+  });
+
+  // Deep link from a "book is available again" notification: /student?book=12
+  const bookParam = searchParams.get('book');
+  const { openBook } = reserve;
+  useEffect(() => {
+    if (!bookParam || books.length === 0) return;
+    const book = books.find((b) => String(b.id) === bookParam);
+    if (book) openBook(book);
+    setSearchParams({}, { replace: true });
+  }, [bookParam, books, openBook, setSearchParams]);
+
+  const categories = useMemo(() => categoriesOf(books), [books]);
+  const filteredBooks = useMemo(
+    () => sortBooks(filterBooks(books, { query, category }), sort),
+    [books, query, category, sort]
   );
 
-  const filteredBooks = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return books.filter((book) => {
-      const matchesQuery =
-        !q ||
-        book.title.toLowerCase().includes(q) ||
-        book.author.toLowerCase().includes(q) ||
-        (book.isbn || '').toLowerCase().includes(q);
-      const matchesCategory = !category || book.category === category;
-      return matchesQuery && matchesCategory;
-    });
-  }, [books, query, category]);
+  // Start from the first page again whenever the result set changes.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [query, category, sort]);
 
-  async function handleReserveSubmit(payload) {
-    setSubmitting(true);
-    setFormError('');
-    try {
-      const res = await api.post('/borrows', payload, {
-        headers: { 'Idempotency-Key': crypto.randomUUID() },
-      });
-      setSelectedBook(null);
-      setReservationResult(res.data.record);
-      addNotification(`You have successfully reserved "${res.data.record.book_title}".`);
-      showSuccess('Book reserved successfully');
-      loadBooks();
-    } catch (err) {
-      const message = err.response?.data?.message || 'Failed to reserve book';
-      setFormError(message);
-      showError(message);
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const selectedBook = reserve.selectedBook && (books.find((b) => b.id === reserve.selectedBook.id) || reserve.selectedBook);
 
   return (
     <div className="page catalog-page">
       <div className="page-header">
-        <h1>Book References Catalog</h1>
+        <div>
+          <h1>Book References Catalog</h1>
+          <p className="page-subtitle">Find a reference book, reserve it, and pick it up at the library desk.</p>
+        </div>
       </div>
+
+      {!mine.loading && !mine.loadError && <StudentSummary summary={mine.summary} policy={mine.policy} />}
 
       <BookSearchBar
         query={query}
@@ -89,6 +86,8 @@ export default function StudentCatalogPage() {
         category={category}
         onCategoryChange={setCategory}
         categories={categories}
+        sort={sort}
+        onSortChange={setSort}
       />
 
       <div className="catalog-scroll-area">
@@ -99,34 +98,41 @@ export default function StudentCatalogPage() {
             <ErrorState onRetry={loadBooks} />
           ) : (
             <>
-              {filteredBooks.map((book) => (
-                <BookCatalogCard
-                  key={book.id}
-                  book={book}
-                  onOpen={(b) => {
-                    setFormError('');
-                    setSelectedBook(b);
-                  }}
-                />
+              {filteredBooks.slice(0, visibleCount).map((book) => (
+                <BookCatalogCard key={book.id} book={book} onOpen={reserve.openBook} />
               ))}
               {filteredBooks.length === 0 && <EmptyState message="No books match your search." />}
             </>
           )}
         </div>
+        {!loading && filteredBooks.length > visibleCount && (
+          <div className="load-more-row">
+            <span className="muted">
+              Showing {visibleCount} of {filteredBooks.length}
+            </span>
+            <button type="button" className="btn-ghost" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
+              Show more
+            </button>
+          </div>
+        )}
       </div>
 
       {selectedBook && (
         <BookDetailModal
           book={selectedBook}
-          submitting={submitting}
-          error={formError}
-          onClose={() => setSelectedBook(null)}
-          onSubmitReservation={handleReserveSubmit}
+          policy={mine.policy}
+          blocker={mine.blockerFor(selectedBook)}
+          submitting={reserve.submitting}
+          error={reserve.formError}
+          onClose={reserve.closeBook}
+          onSubmitReservation={reserve.submitReservation}
+          onToggleWaitlist={reserve.toggleWaitlist}
+          waitlistBusy={reserve.waitlistBusy}
         />
       )}
 
-      {reservationResult && (
-        <ReservationSuccessModal record={reservationResult} onClose={() => setReservationResult(null)} />
+      {reserve.reservationResult && (
+        <ReservationSuccessModal record={reserve.reservationResult} onClose={reserve.closeResult} />
       )}
     </div>
   );

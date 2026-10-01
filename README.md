@@ -39,7 +39,8 @@ This starts the backend (`http://localhost:5000`) and the frontend
 (`http://localhost:5173`) together in one terminal.
 
 **5. Open the app.** Go to `http://localhost:5173` in your browser and log
-in with a demo account:
+in with a demo account (new staff accounts are created from **Students →
+Add Staff Account**):
 
 | Role    | Email                  | Password      |
 |---------|------------------------|----------------|
@@ -58,34 +59,85 @@ how it works or run things separately.
 
 ## Layout
 
-Each portal (student / staff) has a sidebar with three sections:
+**Student portal**
 
-- **Product Catalog** — a clickable grid of books. Clicking a book opens a
-  detail modal (cover, publisher/ISBN/date, availability, description) with
-  a **Bookmark** toggle and a **Reserve** button that reveals the
-  reservation form (purpose, borrow date range, time to return, policy
-  agreement) in the same modal. Submitting issues a reference number and a
-  printable confirmation. Staff see the same catalog for managing inventory
-  (add/delete) instead of reserving.
-- **Reservations** — pending requests awaiting counter pickup. Staff can
-  **Hand Over** a reservation here (typing in the reservation's reference
-  number to confirm).
-- **Borrowed Books** — books currently checked out and past returns. Staff
-  can **Mark Returned** here.
+- **Book References Catalog**: a "My status" strip (books on loan, awaiting
+  pickup, next due date, borrowing slots used) above a searchable,
+  sortable book grid. Opening a book shows its details with **Bookmark** and
+  **Reserve** buttons. If the student can't reserve (overdue book, limit
+  reached, already reserved), the reason is shown up front. When every copy
+  is out, **Notify me when available** puts them on the book's waitlist.
+- **Reservations**: reservations awaiting pickup (with the pickup deadline),
+  each with a **Cancel** button, plus a **Past** tab for cancelled, declined
+  and expired ones.
+- **Borrowed Books**: current loans with due date and days left (overdue
+  ones highlighted in red), a **Renew** button, and a **History** tab.
+- **Bookmarks**: saved books, stored on the server so they follow the
+  student across devices.
+
+**Staff portal**
+
+- **Dashboard**: desk lookup (search by reference no., student, or book),
+  counts for awaiting pickup / on loan / overdue / due today, a "Needs
+  attention" list, and recent activity.
+- **Book References Catalog**: add, edit and remove books. Cards show how
+  many copies are on loan or reserved.
+- **Reservations**: searchable list sorted by pickup deadline. **Hand Over**
+  (confirm the reference number and set the due date) or **Decline** (with
+  a reason that is sent to the student).
+- **Borrowed Books**: **On loan / Overdue / Returned** tabs, search,
+  **Mark Returned**, and **Export CSV** for reports.
+- **Students**: every student with what they currently have out (overdue
+  first). Click one to see all their records. **Add Staff Account** lives
+  here, because public sign-up only creates student accounts.
 
 ## Borrowing workflow
 
-The status moves through three stages, each with its own badge color on the
-COC (yellow/green) theme:
+There are no fines (these are school-owned reference books). Limits,
+reminders and the overdue block are what keep books circulating.
 
-1. **Reserved** (yellow) — student submitted the reservation online; a copy is held.
-2. **Borrowed** (green) — staff handed the physical book to the student ("Hand Over").
-3. **Returned** (gray) — staff received the book back; the copy is available again.
+```
+reserved --hand over--> borrowed --return--> returned
+   |                       (overdue = borrowed and past its due date)
+   +-- student cancels --> cancelled
+   +-- staff declines ---> rejected
+   +-- not picked up ----> expired
+```
 
-A notification bell in the navbar shows reservation/hand-over/return updates
-(stored server-side per user, so a student sees updates staff make from a
-different device). Bookmarks are saved per-user in the browser's
-localStorage.
+1. **Reserved**: the student reserves online and a copy is held. They must
+   pick it up by the *pickup deadline* (requested start date +
+   `RESERVATION_HOLD_DAYS`) or the reservation expires and the copy is
+   released.
+2. **Borrowed**: staff hand the book over. The due date defaults to the
+   student's requested return date (capped at `MAX_LOAN_DAYS`) and can be
+   changed at the desk. Students may renew a loan `MAX_RENEWALS` time(s),
+   unless it's overdue or others are on the waitlist.
+3. **Returned**: staff receive the book back and the copy is available
+   again. Everyone on that book's waitlist is notified.
+
+Borrowing rules, all overridable in `backend/.env`:
+
+| Variable                | Default | Meaning |
+|-------------------------|---------|---------|
+| `RESERVATION_HOLD_DAYS` | 2       | Days after the requested start date that a copy is held for pickup |
+| `MAX_ADVANCE_DAYS`      | 30      | How far ahead a student may reserve |
+| `DEFAULT_LOAN_DAYS`     | 7       | Loan length when the requested return date has already passed at handover |
+| `MAX_LOAN_DAYS`         | 14      | Longest loan allowed |
+| `MAX_ACTIVE_ITEMS`      | 3       | Reservations + loans a student may hold at once |
+| `MAX_RENEWALS`          | 1       | Self-service renewals per loan |
+| `RENEWAL_DAYS`          | 7       | Days each renewal adds |
+
+A student with an overdue book can't reserve anything else until they
+return it.
+
+**Automatic reminders.** A background sweep runs every 30 minutes, and also
+just before borrow lists load. It:
+
+- expires reservations that weren't picked up
+- reminds students the day before (and the day of) a due date
+- notifies the student and all staff once a loan becomes overdue
+
+Notifications link straight to the relevant page.
 
 ## Project structure
 
@@ -95,11 +147,14 @@ Prototype/
 │   ├── database/
 │   │   └── schema.sql          # tables + seed data (auto-applied on startup)
 │   ├── src/
-│   │   ├── config/db.js        # MySQL connection pool
-│   │   ├── config/migrate.js   # runs schema.sql on every server start
+│   │   ├── config/db.js        # MySQL connection pool + transaction helper
+│   │   ├── config/migrate.js   # runs schema.sql + upgrades older databases on every start
+│   │   ├── config/policy.js    # borrowing rules (loan length, limits, hold days)
+│   │   ├── services/borrowSweep.js # expiry, due-soon and overdue notifications
 │   │   ├── controllers/        # request handlers (auth, books, borrows, notifications)
 │   │   ├── middleware/         # JWT auth, role guard, error handler
-│   │   ├── models/             # SQL queries (User, Book, Borrow, Notification)
+│   │   ├── models/             # SQL queries (User, Book, Borrow, Notification,
+│   │   │                       #   Bookmark, Waitlist, PasswordReset)
 │   │   ├── routes/             # Express routers
 │   │   └── app.js              # Express app + route wiring
 │   ├── server.js                # entry point (runs migrate() before listening)
@@ -114,10 +169,13 @@ Prototype/
     │   │                        # BookCatalogCard, BookDetailModal, AddBookModal,
     │   │                        # BorrowRecordRow, ReservationSuccessModal, HandoverModal,
     │   │                        # ForgotPasswordModal, GoogleLoginModal, StatusBadge
-    │   ├── utils/                # dateFormat, bookCover helpers
+    │   ├── hooks/                # useMyBorrows, useAllBorrows, useReserveFlow,
+    │   │                        # useModalA11y (Esc/focus trap), useUrlParam
+    │   ├── utils/                # dateFormat, bookCover, records (status labels,
+    │   │                        # due text), catalog (filter/sort), csv
     │   └── pages/                # Login, Register,
     │                              # Student{Catalog,Reservations,Borrowed,Bookmarks}Page,
-    │                              # Staff{Catalog,Reservations,Borrowed}Page
+    │                              # Staff{Dashboard,Catalog,Reservations,Borrowed,Students}Page
     ├── .env                      # local config (not committed)
     └── .env.example
 ```
@@ -146,22 +204,30 @@ Health check for the backend: `GET http://localhost:5000/api/health`
 
 | Method | Route                     | Access        | Description              |
 |--------|---------------------------|---------------|--------------------------|
-| POST   | /api/auth/register        | public        | Create staff/student account |
+| POST   | /api/auth/register        | public        | Create a **student** account (staff can't self-register) |
+| POST   | /api/auth/staff           | staff         | Create a staff account |
 | POST   | /api/auth/login           | public        | Login, returns JWT       |
 | GET    | /api/auth/me              | authenticated | Current user profile     |
-| POST   | /api/auth/forgot-password | public        | Generate an OTP for password reset (no SMTP configured — OTP is returned in the response, not emailed) |
-| POST   | /api/auth/reset-password  | public        | Reset password using the OTP |
-| GET    | /api/books                | authenticated | List all books           |
-| POST   | /api/books                | staff         | Add a book (title, author, isbn, category, publisher, publishedDate, description, coverUrl, totalCopies) |
-| PUT    | /api/books/:id            | staff         | Update a book             |
-| DELETE | /api/books/:id            | staff         | Delete a book              |
-| POST   | /api/borrows              | student       | Reserve a book (bookId, purpose, requestStartDate, requestEndDate, requestTime, policyAgreed) — status → `reserved`, generates a reference number |
-| PATCH  | /api/borrows/:id/handover | staff         | Hand the physical book over (status → `borrowed`), notifies the student |
-| PATCH  | /api/borrows/:id/return   | staff         | Mark a book as returned (status → `returned`), notifies the student |
-| GET    | /api/borrows/mine         | student       | My reservations/loans      |
-| GET    | /api/borrows              | staff         | All reservations/loans     |
-| GET    | /api/notifications/mine   | authenticated | My notifications           |
-| POST   | /api/notifications        | authenticated | Create a notification for myself |
+| POST   | /api/auth/forgot-password | public        | Generate a one-time code. Same response whether or not the email exists. Outside production the code is returned in the response (no SMTP configured) |
+| POST   | /api/auth/reset-password  | public        | Reset the password with the code (5 attempts, 5-minute expiry) |
+| GET    | /api/books                | authenticated | List books (archived books hidden), with copies reserved/on loan and a `waitlisted` flag for the caller |
+| POST   | /api/books                | staff         | Add a book |
+| PUT    | /api/books/:id            | staff         | Update a book. Total copies can't go below copies currently out |
+| DELETE | /api/books/:id            | staff         | Remove a book: refused while copies are out; archived (history kept) if it was ever borrowed |
+| GET    | /api/books/bookmarks      | student       | My bookmarked book IDs |
+| PUT/DELETE | /api/books/:id/bookmark | student     | Bookmark / un-bookmark |
+| PUT/DELETE | /api/books/:id/waitlist | student     | Join / leave a book's waitlist |
+| GET    | /api/borrows/policy       | authenticated | Current borrowing rules |
+| POST   | /api/borrows              | student       | Reserve a book (bookId, purpose, requestStartDate, requestEndDate, requestTime?, policyAgreed) |
+| PATCH  | /api/borrows/:id/cancel   | student       | Cancel my pending reservation |
+| PATCH  | /api/borrows/:id/renew    | student       | Renew my loan |
+| PATCH  | /api/borrows/:id/handover | staff         | Hand the book over (optional `dueDate`) → `borrowed` |
+| PATCH  | /api/borrows/:id/reject   | staff         | Decline a reservation (`reason` required) → `rejected` |
+| PATCH  | /api/borrows/:id/return   | staff         | Mark returned → `returned` |
+| GET    | /api/borrows/mine         | student       | My reservations/loans (+ policy) |
+| GET    | /api/borrows              | staff         | All reservations/loans (+ policy) |
+| GET    | /api/users/students       | staff         | Students with their reserved/borrowed/overdue counts |
+| GET    | /api/notifications/mine   | authenticated | My notifications (each may carry an in-app `link`) |
 | PATCH  | /api/notifications/mark-read | authenticated | Mark all my notifications as read |
 
 ## Notes
@@ -171,5 +237,6 @@ Health check for the backend: `GET http://localhost:5000/api/health`
   `Authorization: Bearer <token>` header.
 - `JWT_SECRET` in `backend/.env` should be replaced with a long random
   string before any real deployment.
-- This is a starting template — extend it with features like fines,
-  due-date reminders, or book categories as needed.
+- Reserving, handing over, returning, cancelling and declining each run in
+  a database transaction with row locks. Two students can't both get the
+  last copy, and two staff clicking at once can't double-apply an action.

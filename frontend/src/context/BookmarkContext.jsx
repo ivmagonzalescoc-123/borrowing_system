@@ -1,41 +1,47 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import api from '../api/axios';
 import { useAuth } from './AuthContext';
 import { useToast } from './ToastContext';
 
 const BookmarkContext = createContext(null);
 
-function storageKey(userId) {
-  return `bookmarks_${userId}`;
-}
-
+// Bookmarks live on the server so they follow the student across devices
+// and browsers. Toggles update the UI immediately and roll back on failure.
 export function BookmarkProvider({ children }) {
   const { user } = useAuth();
-  const { showSuccess } = useToast();
+  const { showSuccess, showError } = useToast();
   const [bookmarkedIds, setBookmarkedIds] = useState([]);
 
   useEffect(() => {
-    if (!user) {
+    if (user?.role !== 'student') {
       setBookmarkedIds([]);
       return;
     }
-    try {
-      const stored = JSON.parse(localStorage.getItem(storageKey(user.id)) || '[]');
-      setBookmarkedIds(stored);
-    } catch {
-      setBookmarkedIds([]);
-    }
+    let cancelled = false;
+    api
+      .get('/books/bookmarks')
+      .then((res) => {
+        if (!cancelled) setBookmarkedIds(res.data.bookIds);
+      })
+      .catch(() => {
+        if (!cancelled) setBookmarkedIds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
-  function toggleBookmark(bookId) {
+  async function toggleBookmark(bookId) {
     const wasBookmarked = bookmarkedIds.includes(bookId);
-    const next = wasBookmarked
-      ? bookmarkedIds.filter((id) => id !== bookId)
-      : [...bookmarkedIds, bookId];
-    setBookmarkedIds(next);
-    if (user) {
-      localStorage.setItem(storageKey(user.id), JSON.stringify(next));
+    setBookmarkedIds((prev) => (wasBookmarked ? prev.filter((id) => id !== bookId) : [bookId, ...prev]));
+    try {
+      if (wasBookmarked) await api.delete(`/books/${bookId}/bookmark`);
+      else await api.put(`/books/${bookId}/bookmark`);
+      showSuccess(wasBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks');
+    } catch {
+      setBookmarkedIds((prev) => (wasBookmarked ? [bookId, ...prev] : prev.filter((id) => id !== bookId)));
+      showError("Couldn't update your bookmarks. Try again.");
     }
-    showSuccess(wasBookmarked ? 'Removed from bookmarks' : 'Added to bookmarks');
   }
 
   function isBookmarked(bookId) {

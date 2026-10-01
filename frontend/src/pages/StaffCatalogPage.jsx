@@ -6,8 +6,10 @@ import BookDetailModal from '../components/BookDetailModal';
 import AddBookModal from '../components/AddBookModal';
 import BookSearchBar from '../components/BookSearchBar';
 import CatalogSkeleton from '../components/CatalogSkeleton';
+import ConfirmModal from '../components/ConfirmModal';
 import { EmptyState, ErrorState } from '../components/DataState';
 import { useToast } from '../context/ToastContext';
+import { PAGE_SIZE, categoriesOf, filterBooks, sortBooks } from '../utils/catalog';
 
 export default function StaffCatalogPage() {
   const [books, setBooks] = useState([]);
@@ -21,6 +23,9 @@ export default function StaffCatalogPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [sort, setSort] = useState('title');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { showSuccess, showError } = useToast();
 
   async function loadBooks() {
@@ -39,23 +44,15 @@ export default function StaffCatalogPage() {
     loadBooks();
   }, []);
 
-  const categories = useMemo(
-    () => [...new Set(books.map((b) => b.category).filter(Boolean))],
-    [books]
+  const categories = useMemo(() => categoriesOf(books), [books]);
+  const filteredBooks = useMemo(
+    () => sortBooks(filterBooks(books, { query, category }), sort),
+    [books, query, category, sort]
   );
 
-  const filteredBooks = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return books.filter((book) => {
-      const matchesQuery =
-        !q ||
-        book.title.toLowerCase().includes(q) ||
-        book.author.toLowerCase().includes(q) ||
-        (book.isbn || '').toLowerCase().includes(q);
-      const matchesCategory = !category || book.category === category;
-      return matchesQuery && matchesCategory;
-    });
-  }, [books, query, category]);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [query, category, sort]);
 
   async function handleAddBook(payload) {
     setSubmitting(true);
@@ -100,11 +97,13 @@ export default function StaffCatalogPage() {
   async function handleDeleteBook(book) {
     setDeletingId(book.id);
     try {
-      await api.delete(`/books/${book.id}`);
-      showSuccess('Book deleted successfully');
+      const res = await api.delete(`/books/${book.id}`);
+      showSuccess(res.data?.message || 'Book removed');
+      setDeleteTarget(null);
       loadBooks();
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to delete book');
+      showError(err.response?.data?.message || 'Failed to delete book', 4000);
+      setDeleteTarget(null);
     } finally {
       setDeletingId(null);
     }
@@ -115,6 +114,9 @@ export default function StaffCatalogPage() {
       <div className="page-header">
         <div>
           <h1>Book References Catalog</h1>
+          <p className="page-subtitle">
+            {books.length} titles · {books.reduce((n, b) => n + b.total_copies, 0)} copies
+          </p>
         </div>
         <button className="btn-primary btn-yellow" onClick={() => setShowAddModal(true)}>
           <Plus size={16} strokeWidth={1.75} />
@@ -128,6 +130,8 @@ export default function StaffCatalogPage() {
         category={category}
         onCategoryChange={setCategory}
         categories={categories}
+        sort={sort}
+        onSortChange={setSort}
       />
 
       <div className="catalog-scroll-area">
@@ -138,20 +142,53 @@ export default function StaffCatalogPage() {
             <ErrorState onRetry={loadBooks} />
           ) : (
             <>
-              {filteredBooks.map((book) => (
+              {filteredBooks.slice(0, visibleCount).map((book) => (
                 <BookCatalogCard
                   key={book.id}
                   book={book}
                   onOpen={setSelectedBook}
-                  onDelete={handleDeleteBook}
+                  onDelete={setDeleteTarget}
                   deleting={deletingId === book.id}
+                  showCopiesOut
                 />
               ))}
               {filteredBooks.length === 0 && <EmptyState message="No books match your search." />}
             </>
           )}
         </div>
+        {!loading && filteredBooks.length > visibleCount && (
+          <div className="load-more-row">
+            <span className="muted">
+              Showing {visibleCount} of {filteredBooks.length}
+            </span>
+            <button type="button" className="btn-ghost" onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}>
+              Show more
+            </button>
+          </div>
+        )}
       </div>
+
+      {deleteTarget &&
+        (Number(deleteTarget.reserved_count) + Number(deleteTarget.borrowed_count) > 0 ? (
+          <ConfirmModal
+            title="Can't remove this book yet"
+            message={`"${deleteTarget.title}" still has copies reserved or on loan. Resolve those first.`}
+            confirmLabel="OK"
+            cancelLabel="Close"
+            onConfirm={() => setDeleteTarget(null)}
+            onClose={() => setDeleteTarget(null)}
+          />
+        ) : (
+          <ConfirmModal
+            title="Remove this book?"
+            message={`"${deleteTarget.title}" will be removed from the catalog. If it has borrowing history, it's archived so past records are kept.`}
+            confirmLabel="Remove book"
+            danger
+            submitting={deletingId === deleteTarget.id}
+            onConfirm={() => handleDeleteBook(deleteTarget)}
+            onClose={() => setDeleteTarget(null)}
+          />
+        ))}
 
       {selectedBook && (
         <BookDetailModal

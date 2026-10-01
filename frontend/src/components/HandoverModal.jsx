@@ -1,11 +1,25 @@
 import { useState } from 'react';
-import { X, KeyRound } from 'lucide-react';
-import Portal from './Portal';
+import { KeyRound, CalendarClock } from 'lucide-react';
+import Modal from './Modal';
 import SparkleSpinner from './SparkleSpinner';
+import { addDays, todayString } from '../utils/records';
+import { formatDate } from '../utils/dateFormat';
 
-export default function HandoverModal({ record, onClose, onConfirm, submitting, error }) {
+// Mirrors the server's default: the student's requested end date when it's
+// still ahead, otherwise the default loan length — capped at the max.
+function suggestedDueDate(record, policy) {
+  const today = todayString();
+  const requested = record.request_end_date?.slice(0, 10);
+  const due = requested && requested > today ? requested : addDays(today, policy?.defaultLoanDays ?? 7);
+  const latest = addDays(today, policy?.maxLoanDays ?? 14);
+  return due > latest ? latest : due;
+}
+
+export default function HandoverModal({ record, policy, onClose, onConfirm, submitting, error }) {
   const [referenceNo, setReferenceNo] = useState('');
+  const [dueDate, setDueDate] = useState(() => suggestedDueDate(record, policy));
   const [localError, setLocalError] = useState('');
+  const today = todayString();
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -19,49 +33,59 @@ export default function HandoverModal({ record, onClose, onConfirm, submitting, 
       setLocalError('Reference number does not match this reservation.');
       return;
     }
-    onConfirm();
+    onConfirm({ dueDate });
   }
 
   return (
-    <Portal>
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
-            <X size={18} strokeWidth={1.75} />
-          </button>
+    <Modal onClose={onClose} label="Hand over book">
+      <h4 className="section-title">Hand Over Book</h4>
+      <p className="modal-title">{record.book_title}</p>
+      <p className="modal-subtitle">
+        {record.student_name} ({record.student_id_number})
+      </p>
+      <p className="record-line muted">
+        Requested {formatDate(record.request_start_date)} – {formatDate(record.request_end_date)}
+      </p>
 
-          <h4 className="section-title">Hand Over Book</h4>
-          <p className="modal-title">{record.book_title}</p>
-          <p className="modal-subtitle">
-            {record.student_name} ({record.student_id_number})
-          </p>
+      <form className="reservation-form" onSubmit={handleSubmit}>
+        <label>
+          <span className="label-with-icon">
+            <KeyRound size={14} strokeWidth={1.75} /> Reference Number
+          </span>
+          <input
+            value={referenceNo}
+            onChange={(e) => setReferenceNo(e.target.value)}
+            placeholder="Ask the student for their reference number"
+            autoFocus
+          />
+        </label>
+        <label>
+          <span className="label-with-icon">
+            <CalendarClock size={14} strokeWidth={1.75} /> Due date
+          </span>
+          <input
+            type="date"
+            value={dueDate}
+            min={addDays(today, 1)}
+            max={addDays(today, policy?.maxLoanDays ?? 14)}
+            onChange={(e) => setDueDate(e.target.value)}
+            required
+          />
+        </label>
 
-          <form className="reservation-form" onSubmit={handleSubmit}>
-            <label>
-              <KeyRound size={14} strokeWidth={1.75} /> Reference Number
-              <input
-                value={referenceNo}
-                onChange={(e) => setReferenceNo(e.target.value)}
-                placeholder="Ask the student for their reference number"
-                autoFocus
-              />
-            </label>
+        {(localError || error) && <p className="error">{localError || error}</p>}
 
-            {(localError || error) && <p className="error">{localError || error}</p>}
-
-            <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
-              {submitting ? (
-                <>
-                  <SparkleSpinner size={16} />
-                  Handing over…
-                </>
-              ) : (
-                'Confirm Hand Over'
-              )}
-            </button>
-          </form>
-        </div>
-      </div>
-    </Portal>
+        <button type="submit" className={`btn-primary${submitting ? ' is-loading' : ''}`} disabled={submitting}>
+          {submitting ? (
+            <>
+              <SparkleSpinner size={16} />
+              Handing over…
+            </>
+          ) : (
+            'Confirm Hand Over'
+          )}
+        </button>
+      </form>
+    </Modal>
   );
 }

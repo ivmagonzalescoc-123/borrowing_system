@@ -1,13 +1,34 @@
 const db = require('../config/db');
 
+// Live per-book counts so the catalog can show "2 out · 1 reserved" and so
+// copy-count edits can be checked against copies that are actually out.
+const BOOK_SELECT = `
+  SELECT b.*,
+         (SELECT COUNT(*) FROM borrow_records br WHERE br.book_id = b.id AND br.status = 'reserved') AS reserved_count,
+         (SELECT COUNT(*) FROM borrow_records br WHERE br.book_id = b.id AND br.status = 'borrowed') AS borrowed_count
+  FROM books b
+`;
+
 const BookModel = {
-  async findAll() {
-    const [rows] = await db.query('SELECT * FROM books ORDER BY title');
+  // `userId` adds a `waitlisted` flag telling whether that user is waiting
+  // for a copy of each book.
+  async findAll({ userId } = {}) {
+    const [rows] = await db.query(
+      `SELECT x.*, EXISTS(SELECT 1 FROM book_waitlist w WHERE w.book_id = x.id AND w.user_id = ?) AS waitlisted
+       FROM (${BOOK_SELECT} WHERE b.archived_at IS NULL) x
+       ORDER BY x.title`,
+      [userId || 0]
+    );
     return rows;
   },
 
-  async findById(id) {
-    const [rows] = await db.query('SELECT * FROM books WHERE id = ?', [id]);
+  async findById(id, conn = db) {
+    const [rows] = await conn.query(`${BOOK_SELECT} WHERE b.id = ?`, [id]);
+    return rows[0] || null;
+  },
+
+  async findByIsbn(isbn) {
+    const [rows] = await db.query('SELECT * FROM books WHERE isbn = ?', [isbn]);
     return rows[0] || null;
   },
 
@@ -53,19 +74,32 @@ const BookModel = {
     return this.findById(id);
   },
 
+  async countRecords(id) {
+    const [[row]] = await db.query('SELECT COUNT(*) AS count FROM borrow_records WHERE book_id = ?', [id]);
+    return row.count;
+  },
+
+  async archive(id) {
+    await db.query('UPDATE books SET archived_at = NOW() WHERE id = ?', [id]);
+    await db.query('DELETE FROM book_waitlist WHERE book_id = ?', [id]);
+  },
+
   async remove(id) {
     await db.query('DELETE FROM books WHERE id = ?', [id]);
   },
 
-  async decrementAvailable(id) {
-    await db.query(
+  // Atomic: only succeeds while a copy is on the shelf, so two students
+  // racing for the last copy can't both get it. Returns true on success.
+  async takeCopy(id, conn = db) {
+    const [result] = await conn.query(
       'UPDATE books SET available_copies = available_copies - 1 WHERE id = ? AND available_copies > 0',
       [id]
     );
+    return result.affectedRows === 1;
   },
 
-  async incrementAvailable(id) {
-    await db.query(
+  async releaseCopy(id, conn = db) {
+    await conn.query(
       'UPDATE books SET available_copies = LEAST(available_copies + 1, total_copies) WHERE id = ?',
       [id]
     );

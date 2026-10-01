@@ -2,11 +2,27 @@ import { Trash2 } from 'lucide-react';
 import { coverColor, coverInitial } from '../utils/bookCover';
 import SparkleSpinner from './SparkleSpinner';
 
-export default function BookCatalogCard({ book, onOpen, onDelete, deleting }) {
+export default function BookCatalogCard({ book, onOpen, onDelete, deleting, showCopiesOut = false }) {
   const isAvailable = book.available_copies > 0;
+  const copiesOut = Number(book.borrowed_count || 0) + Number(book.reserved_count || 0);
+
+  function handleKeyDown(e) {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpen(book);
+    }
+  }
 
   return (
-    <div className="catalog-card" onClick={() => onOpen(book)} role="button" tabIndex={0}>
+    <div
+      className="catalog-card"
+      onClick={() => onOpen(book)}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`${book.title} by ${book.author}`}
+    >
       {onDelete && (
         <button
           className={`catalog-card-delete${deleting ? ' is-loading' : ''}`}
@@ -33,8 +49,14 @@ export default function BookCatalogCard({ book, onOpen, onDelete, deleting }) {
         <p className="catalog-card-author">{book.author}</p>
         <div className="catalog-card-availability">
           <span className={`availability-dot ${isAvailable ? 'is-available' : 'is-unavailable'}`} />
-          {isAvailable ? `${book.available_copies} of ${book.total_copies} available` : 'Unavailable'}
+          {isAvailable ? `${book.available_copies} of ${book.total_copies} available` : 'All copies out'}
         </div>
+        {showCopiesOut && copiesOut > 0 && (
+          <p className="catalog-card-out">
+            {book.borrowed_count} on loan · {book.reserved_count} reserved
+          </p>
+        )}
+        {!showCopiesOut && book.waitlisted ? <p className="catalog-card-out">On your waitlist</p> : null}
       </div>
     </div>
   );

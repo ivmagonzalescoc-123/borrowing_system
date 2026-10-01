@@ -39,6 +39,29 @@ const UserModel = {
     return rows;
   },
 
+  // Students with their current borrowing load, for the staff Students page.
+  async findStudentsWithCounts(todayDate) {
+    const [rows] = await db.query(
+      `SELECT u.id, u.id_number, u.full_name, u.email, u.course, u.created_at,
+              SUM(br.status = 'reserved') AS reserved_count,
+              SUM(br.status = 'borrowed') AS borrowed_count,
+              SUM(br.status = 'borrowed' AND br.due_date < ?) AS overdue_count,
+              COUNT(br.id) AS total_records
+       FROM users u
+       LEFT JOIN borrow_records br ON br.student_id = u.id
+       WHERE u.role = 'student'
+       GROUP BY u.id
+       ORDER BY u.full_name`,
+      [todayDate]
+    );
+    return rows.map((row) => ({
+      ...row,
+      reserved_count: Number(row.reserved_count) || 0,
+      borrowed_count: Number(row.borrowed_count) || 0,
+      overdue_count: Number(row.overdue_count) || 0,
+    }));
+  },
+
   async findAllStaff() {
     const [rows] = await db.query(
       "SELECT id, id_number, full_name, email, created_at FROM users WHERE role = 'staff' ORDER BY full_name"

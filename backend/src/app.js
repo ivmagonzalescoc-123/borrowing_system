@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth.routes');
 const bookRoutes = require('./routes/book.routes');
 const borrowRoutes = require('./routes/borrow.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const userRoutes = require('./routes/user.routes');
 const { notFound, errorHandler } = require('./middleware/error.middleware');
 const { securityHeaders, enforceHttps, sanitizeInput } = require('./middleware/security.middleware');
 const { generalLimiter, generalSlowDown } = require('./middleware/rateLimit.middleware');
@@ -85,6 +86,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/books', bookRoutes);
 app.use('/api/borrows', borrowRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/users', userRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

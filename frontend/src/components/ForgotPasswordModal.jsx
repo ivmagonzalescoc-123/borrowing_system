@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { X, Mail, KeyRound, Lock } from 'lucide-react';
+import { Mail, KeyRound, Lock } from 'lucide-react';
 import api from '../api/axios';
 import { useToast } from '../context/ToastContext';
-import Portal from './Portal';
+import Modal from './Modal';
 import SparkleSpinner from './SparkleSpinner';
 
 export default function ForgotPasswordModal({ onClose }) {
@@ -26,11 +26,17 @@ export default function ForgotPasswordModal({ onClose }) {
     setBusy(true);
     try {
       const res = await api.post('/auth/forgot-password', { email });
-      // No SMTP is configured for this demo, so the OTP comes back in the
-      // response and gets auto-filled instead of being emailed.
-      setOtp(res.data.otp);
-      setNotice('No email service is set up for this demo, so your OTP was auto-filled below.');
-      showSuccess('OTP sent');
+      // No SMTP is configured for this demo, so outside production the OTP
+      // comes back in the response and gets auto-filled instead of emailed.
+      // The server answers the same way for unknown emails (so accounts
+      // can't be discovered), in which case no code comes back.
+      if (res.data.otp) {
+        setOtp(res.data.otp);
+        setNotice('No email service is set up for this demo, so your OTP was auto-filled below.');
+      } else {
+        setNotice(res.data.message);
+      }
+      showSuccess('Check your email for the code');
       setStep('reset');
     } catch (err) {
       const message = err.response?.data?.message || 'Could not generate an OTP';
@@ -71,118 +77,111 @@ export default function ForgotPasswordModal({ onClose }) {
   }
 
   return (
-    <Portal>
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
-            <X size={18} strokeWidth={1.75} />
-          </button>
+    <Modal onClose={onClose} label="Forgot password">
 
-          {step === 'email' && (
-            <form onSubmit={handleSendOtp} className="auth-form" style={{ boxShadow: 'none', border: 'none', padding: 0 }}>
-              <h2>Forgot Password</h2>
-              <p className="auth-notice">Enter your account email and we'll generate a one-time code.</p>
-              {error && <p className="error">{error}</p>}
-              <div className="field-group">
-                <label htmlFor="forgot-email">Email</label>
-                <div className="input-icon-wrapper">
-                  <Mail size={16} strokeWidth={1.75} />
-                  <input
-                    id="forgot-email"
-                    type="email"
-                    autoComplete="off"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <button type="submit" className={`btn-primary${busy ? ' is-loading' : ''}`} disabled={busy}>
-                {busy ? (
-                  <>
-                    <SparkleSpinner size={16} />
-                    Sending…
-                  </>
-                ) : (
-                  'Send OTP'
-                )}
-              </button>
-            </form>
-          )}
-
-          {step === 'reset' && (
-            <form onSubmit={handleResetPassword} className="auth-form" style={{ boxShadow: 'none', border: 'none', padding: 0 }}>
-              <h2>Reset Password</h2>
-              {notice && <p className="auth-notice">{notice}</p>}
-              {error && <p className="error">{error}</p>}
-              <div className="field-group">
-                <label htmlFor="otp">One-Time Code</label>
-                <div className="input-icon-wrapper">
-                  <KeyRound size={16} strokeWidth={1.75} />
-                  <input
-                    id="otp"
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    maxLength={6}
-                  />
-                </div>
-              </div>
-              <div className="field-group">
-                <label htmlFor="new-password">New Password</label>
-                <div className="input-icon-wrapper">
-                  <Lock size={16} strokeWidth={1.75} />
-                  <input
-                    id="new-password"
-                    type="password"
-                    autoComplete="off"
-                    placeholder="At least 8 characters, with letters and numbers"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="field-group">
-                <label htmlFor="confirm-password">Confirm Password</label>
-                <div className="input-icon-wrapper">
-                  <Lock size={16} strokeWidth={1.75} />
-                  <input
-                    id="confirm-password"
-                    type="password"
-                    autoComplete="off"
-                    placeholder="Re-enter new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-              <button type="submit" className={`btn-primary${busy ? ' is-loading' : ''}`} disabled={busy}>
-                {busy ? (
-                  <>
-                    <SparkleSpinner size={16} />
-                    Resetting…
-                  </>
-                ) : (
-                  'Reset Password'
-                )}
-              </button>
-            </form>
-          )}
-
-          {step === 'done' && (
-            <div className="auth-form" style={{ boxShadow: 'none', border: 'none', padding: 0 }}>
-              <h2>Password Reset</h2>
-              <p className="auth-notice">
-                Your password has been updated. You can now log in with your new password.
-              </p>
-              <button type="button" className="btn-primary" onClick={onClose}>
-                Back to Login
-              </button>
+      {step === 'email' && (
+        <form onSubmit={handleSendOtp} className="auth-form" style={{ boxShadow: 'none', border: 'none', padding: 0 }}>
+          <h2>Forgot Password</h2>
+          <p className="auth-notice">Enter your account email and we'll generate a one-time code.</p>
+          {error && <p className="error">{error}</p>}
+          <div className="field-group">
+            <label htmlFor="forgot-email">Email</label>
+            <div className="input-icon-wrapper">
+              <Mail size={16} strokeWidth={1.75} />
+              <input
+                id="forgot-email"
+                type="email"
+                autoComplete="off"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoFocus
+              />
             </div>
-          )}
+          </div>
+          <button type="submit" className={`btn-primary${busy ? ' is-loading' : ''}`} disabled={busy}>
+            {busy ? (
+              <>
+                <SparkleSpinner size={16} />
+                Sending…
+              </>
+            ) : (
+              'Send OTP'
+            )}
+          </button>
+        </form>
+      )}
+
+      {step === 'reset' && (
+        <form onSubmit={handleResetPassword} className="auth-form" style={{ boxShadow: 'none', border: 'none', padding: 0 }}>
+          <h2>Reset Password</h2>
+          {notice && <p className="auth-notice">{notice}</p>}
+          {error && <p className="error">{error}</p>}
+          <div className="field-group">
+            <label htmlFor="otp">One-Time Code</label>
+            <div className="input-icon-wrapper">
+              <KeyRound size={16} strokeWidth={1.75} />
+              <input
+                id="otp"
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                maxLength={6}
+              />
+            </div>
+          </div>
+          <div className="field-group">
+            <label htmlFor="new-password">New Password</label>
+            <div className="input-icon-wrapper">
+              <Lock size={16} strokeWidth={1.75} />
+              <input
+                id="new-password"
+                type="password"
+                autoComplete="off"
+                placeholder="At least 8 characters, with letters and numbers"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="field-group">
+            <label htmlFor="confirm-password">Confirm Password</label>
+            <div className="input-icon-wrapper">
+              <Lock size={16} strokeWidth={1.75} />
+              <input
+                id="confirm-password"
+                type="password"
+                autoComplete="off"
+                placeholder="Re-enter new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+            </div>
+          </div>
+          <button type="submit" className={`btn-primary${busy ? ' is-loading' : ''}`} disabled={busy}>
+            {busy ? (
+              <>
+                <SparkleSpinner size={16} />
+                Resetting…
+              </>
+            ) : (
+              'Reset Password'
+            )}
+          </button>
+        </form>
+      )}
+
+      {step === 'done' && (
+        <div className="auth-form" style={{ boxShadow: 'none', border: 'none', padding: 0 }}>
+          <h2>Password Reset</h2>
+          <p className="auth-notice">
+            Your password has been updated. You can now log in with your new password.
+          </p>
+          <button type="button" className="btn-primary" onClick={onClose}>
+            Back to Login
+          </button>
         </div>
-      </div>
-    </Portal>
+      )}
+    </Modal>
   );
 }
