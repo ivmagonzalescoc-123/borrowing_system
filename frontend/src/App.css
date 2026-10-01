@@ -2212,9 +2212,8 @@ a.btn-ghost {
   margin-top: 1rem;
   padding: 0.75rem 0.9rem;
   border-radius: var(--radius-sm);
-  background: var(--gray-25);
-  border: 1px solid var(--gray-200);
-  border-left: 3px solid var(--tone);
+  background: var(--tone-soft);
+  border: 1px solid var(--tone);
   text-align: left;
   font-size: 0.84rem;
   line-height: 1.55;
