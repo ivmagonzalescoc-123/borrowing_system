@@ -115,7 +115,7 @@ export default function StaffCatalogPage() {
         <div>
           <h1>Book References Catalog</h1>
           <p className="page-subtitle">
-            {books.length} titles · {books.reduce((n, b) => n + b.total_copies, 0)} copies
+            {books.length} titles Â· {books.reduce((n, b) => n + b.total_copies, 0)} copies
           </p>
         </div>
         <button className="btn-primary btn-yellow" onClick={() => setShowAddModal(true)}>

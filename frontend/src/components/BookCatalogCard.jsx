@@ -53,7 +53,7 @@ export default function BookCatalogCard({ book, onOpen, onDelete, deleting, show
         </div>
         {showCopiesOut && copiesOut > 0 && (
           <p className="catalog-card-out">
-            {book.borrowed_count} on loan · {book.reserved_count} reserved
+            {book.borrowed_count} on loan Â· {book.reserved_count} reserved
           </p>
         )}
         {!showCopiesOut && book.waitlisted ? <p className="catalog-card-out">On your waitlist</p> : null}

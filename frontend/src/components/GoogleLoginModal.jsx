@@ -62,7 +62,7 @@ export default function GoogleLoginModal({ onClose }) {
           <div className="google-picker-header">
             <GoogleIcon size={28} />
             <h2 className="google-picker-title">Choose an account</h2>
-            <p className="google-picker-subtitle">to continue to COC Library</p>
+            <p className="google-picker-subtitle">to continue to COC Library Borrowing System Prototype</p>
           </div>
 
           {error && <p className="error">{error}</p>}

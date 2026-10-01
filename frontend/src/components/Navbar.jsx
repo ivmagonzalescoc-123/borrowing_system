@@ -10,7 +10,7 @@ export default function Navbar() {
     <nav className="navbar">
       <Link to="/" className="navbar-brand">
         <img src="/assets/img/no-bg-logo.png" alt="" className="navbar-logo" />
-        <span>COC Library</span>
+        <span>COC Library Borrowing System Prototype</span>
       </Link>
       {user && (
         <div className="navbar-links">
