@@ -174,7 +174,10 @@ a {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.6rem 0.8rem;
+  /* Fixed height: hiding the label when collapsed must not change the row
+     height, or every item (and the collapse handle) appears to jump. */
+  height: 2.5rem;
+  padding: 0 0.8rem;
   border-radius: var(--radius-sm);
   color: var(--gray-500);
   font-size: 0.9rem;
@@ -206,41 +209,101 @@ a {
 
 .sidebar.is-collapsed .sidebar-link {
   justify-content: center;
-  padding: 0.6rem;
+  padding: 0;
 }
 
-.sidebar.is-collapsed .sidebar-link span,
-.sidebar.is-collapsed .sidebar-toggle span {
+.sidebar.is-collapsed .sidebar-link span {
   display: none;
 }
 
-.sidebar-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  background: transparent;
-  color: var(--gray-400);
-  border: none;
-  padding: 0.6rem 0.8rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  border-top: 1px solid rgba(242, 183, 5, 0.25);
-  border-radius: 0;
-  margin-top: 0.75rem;
-  padding-top: 1rem;
-  white-space: nowrap;
-  overflow: hidden;
+/* Collapse handle: a round button sitting on the sidebar's right edge.
+   Hover grows it, turns it yellow and slides out a "Collapse / Expand"
+   label; the chevron rotates to point the way the sidebar will move. */
+.sidebar {
+  position: relative;
+  z-index: 5;
 }
 
-.sidebar-toggle:hover {
-  background: transparent;
+.sidebar-handle {
+  position: absolute;
+  /* Centered on the first nav item: sidebar top padding (1.25rem) + half
+     an item (1.25rem) - half the handle (14px). */
+  top: calc(2.5rem - 14px);
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--green-700);
+  color: white;
+  border: 3px solid var(--yellow-50);
+  box-shadow: 0 2px 8px rgba(15, 61, 28, 0.3);
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.sidebar-handle:hover,
+.sidebar-handle:focus-visible {
+  background: var(--yellow-500);
   color: var(--gray-900);
+  transform: scale(1.18);
+  box-shadow: 0 0 0 4px rgba(242, 183, 5, 0.25), 0 3px 10px rgba(15, 61, 28, 0.3);
 }
 
-.sidebar.is-collapsed .sidebar-toggle {
-  justify-content: center;
-  padding-left: 0.6rem;
-  padding-right: 0.6rem;
+.sidebar-handle:active {
+  transform: scale(0.95);
+}
+
+.sidebar-handle-icon {
+  transition: transform 0.25s ease;
+}
+
+.sidebar.is-collapsed .sidebar-handle-icon {
+  transform: rotate(180deg);
+}
+
+.sidebar-handle-tip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translate(-6px, -50%);
+  background: var(--gray-900);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.sidebar-handle-tip kbd {
+  font-family: inherit;
+  font-size: 0.66rem;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}
+
+.sidebar-handle:hover .sidebar-handle-tip,
+.sidebar-handle:focus-visible .sidebar-handle-tip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* Labels fade instead of popping when the sidebar expands. */
+.sidebar-link span {
+  animation: sidebar-label-in 0.2s ease;
+}
+
+@keyframes sidebar-label-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Bottom tab bar — swaps in for the sidebar on narrow/portrait screens */
@@ -520,9 +583,9 @@ button.is-loading:disabled {
   opacity: 0.85;
 }
 
-.catalog-card-delete.is-loading:disabled {
-  background: var(--red-50);
-  color: var(--red-600);
+.catalog-card-archive.is-loading:disabled {
+  background: var(--yellow-50);
+  color: var(--yellow-600);
   opacity: 0.9;
 }
 
@@ -1185,7 +1248,7 @@ button.is-loading:disabled {
   border-color: var(--green-600);
 }
 
-.catalog-card-delete {
+.catalog-card-archive {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
@@ -1194,13 +1257,15 @@ button.is-loading:disabled {
   padding: 0;
   justify-content: center;
   background: rgba(255, 255, 255, 0.92);
-  color: var(--red-600);
+  color: var(--gray-500);
   border: 1px solid var(--gray-200);
   z-index: 2;
 }
 
-.catalog-card-delete:hover {
-  background: var(--red-50);
+.catalog-card-archive:hover {
+  background: var(--yellow-50);
+  color: var(--yellow-600);
+  border-color: var(--yellow-500);
 }
 
 .catalog-card-cover {
@@ -2089,6 +2154,272 @@ a.btn-ghost {
 
 .state-action {
   margin-top: 0.4rem;
+}
+
+/* Confirmation dialog (ConfirmModal): accent strip, question, optional
+   details box, Cancel / Confirm side by side. */
+.confirm-card {
+  --tone: var(--green-700);
+  --tone-soft: var(--green-50);
+  --tone-hover: var(--green-900);
+  --tone-ink: white;
+  max-width: 400px;
+  padding: 1.6rem 1.6rem 1.4rem;
+  text-align: center;
+  overflow: hidden;
+  animation: confirm-pop 0.18s ease-out;
+}
+
+.confirm-card.is-warning {
+  --tone: var(--yellow-500);
+  --tone-soft: var(--yellow-50);
+  --tone-hover: var(--yellow-600);
+  --tone-ink: var(--gray-900);
+}
+
+.confirm-card.is-danger {
+  --tone: var(--red-600);
+  --tone-soft: var(--red-50);
+  --tone-hover: #a33024;
+  --tone-ink: white;
+}
+
+/* Brand accent: green-to-yellow strip across the top of every dialog. */
+.confirm-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--green-700) 0%, var(--green-600) 55%, var(--yellow-500) 100%);
+}
+
+.confirm-card.is-warning .confirm-title {
+  margin: 0 0 0.4rem;
+  font-size: 1.08rem;
+  color: var(--gray-900);
+}
+
+.confirm-message {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--gray-500);
+}
+
+.confirm-details {
+  margin-top: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--gray-25);
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--tone);
+  text-align: left;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--gray-900);
+}
+
+.confirm-details dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.2rem 0.75rem;
+}
+
+.confirm-details dt {
+  color: var(--gray-500);
+}
+
+/* Rows from a [label, value] list: let dt/dd join the parent grid. */
+.confirm-detail-row {
+  display: contents;
+}
+
+.confirm-details dd {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-top: 1.4rem;
+}
+
+.confirm-actions button {
+  justify-content: center;
+  padding: 0.65rem 1rem;
+}
+
+.confirm-button {
+  background: var(--tone);
+  color: var(--tone-ink);
+  font-weight: 600;
+}
+
+.confirm-button:hover:not(:disabled) {
+  background: var(--tone-hover);
+}
+
+button.confirm-button.is-loading:disabled {
+  background: var(--tone);
+  color: var(--tone-ink);
+}
+
+@keyframes confirm-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Header action buttons (e.g. Archived + Add Book) */
+.page-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Outline button for the green page header. */
+.btn-header-ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+}
+
+.btn-header-ghost:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: white;
+}
+
+/* Archived books modal */
+.archived-search {
+  margin: 1rem 0 0.25rem;
+}
+
+.archived-list {
+  margin-top: 1rem;
+  max-height: min(60vh, 460px);
+  overflow-y: auto;
+}
+
+.archived-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 0.15rem;
+  border-top: 1px solid var(--gray-100);
+  font-size: 0.86rem;
+}
+
+.archived-row .record-cover {
+  width: 38px;
+  height: 52px;
+}
+
+.page-loader.is-inline {
+  padding: 2rem 1rem;
+  color: var(--green-700);
+}
+
+/* Page title + "?" help button */
+.page-title-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.page-title-row h1 {
+  margin-bottom: 0;
+}
+
+.page-title-row + .page-subtitle {
+  margin-top: 0.25rem;
+}
+
+/* The panel anchors to .page-title-row (left edge of the title), not to
+   the button, so it never runs off the right side on phones. */
+.page-help {
+  display: inline-flex;
+}
+
+.page-help-button,
+.page-help-button:hover {
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+  border: none;
+  border-radius: 50%;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  flex-shrink: 0;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.page-help-button:hover,
+.page-help-button.is-open {
+  color: var(--yellow-500);
+  transform: scale(1.1);
+}
+
+.page-help-panel {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  z-index: 30;
+  width: min(340px, calc(100vw - 2.5rem));
+  background: white;
+  color: var(--gray-900);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 0.85rem 1rem 1rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.page-help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  color: var(--green-700);
+}
+
+.page-help-close,
+.page-help-close:hover {
+  background: none;
+  color: var(--gray-500);
+  border: none;
+  padding: 0.15rem;
+}
+
+.page-help-close:hover {
+  color: var(--gray-900);
+}
+
+.page-help-body p {
+  margin: 0 0 0.45rem;
+}
+
+.page-help-body ul {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.page-help-body li + li {
+  margin-top: 0.3rem;
 }
 
 /* Mobile bottom bar: the book catalog sits in the center as a larger,

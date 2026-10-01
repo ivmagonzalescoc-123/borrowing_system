@@ -11,6 +11,7 @@ import { useToast } from '../context/ToastContext';
 import useMyBorrows from '../hooks/useMyBorrows';
 import useUrlParam from '../hooks/useUrlParam';
 import { CLOSED_RESERVATION_STATUSES } from '../utils/records';
+import PageHelp from '../components/PageHelp';
 
 export default function StudentReservationsPage() {
   const { records, loading, loadError, reload } = useMyBorrows();
@@ -43,8 +44,17 @@ export default function StudentReservationsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Reservations</h1>
-          <p className="page-subtitle">Show the reference number at the library desk to pick up your book.</p>
+          <div className="page-title-row">
+            <h1>Reservations</h1>
+            <PageHelp>
+              <p>Show the reference number at the library desk to pick up your book.</p>
+              <ul>
+                <li>Pick it up by the date shown, or the reservation expires and the copy goes to the next student.</li>
+                <li>Changed your mind? Tap <strong>Cancel</strong> so someone else can borrow it.</li>
+                <li>The <strong>Past</strong> tab lists cancelled, declined, and expired reservations.</li>
+              </ul>
+            </PageHelp>
+          </div>
         </div>
       </div>
 
@@ -101,7 +111,11 @@ export default function StudentReservationsPage() {
       {cancelTarget && (
         <ConfirmModal
           title="Cancel this reservation?"
-          message={`"${cancelTarget.book_title}" will go back on the shelf for other students.`}
+          message="The copy goes back on the shelf for other students. This cannot be undone."
+          details={[
+            ['Book', cancelTarget.book_title],
+            ['Ref No.', cancelTarget.reference_no],
+          ]}
           confirmLabel="Cancel reservation"
           cancelLabel="Keep it"
           danger

@@ -9,6 +9,7 @@ import { EmptyState, ErrorState } from '../components/DataState';
 import { useToast } from '../context/ToastContext';
 import useAllBorrows from '../hooks/useAllBorrows';
 import useUrlParam from '../hooks/useUrlParam';
+import PageHelp from '../components/PageHelp';
 
 export default function StaffStudentsPage() {
   const [students, setStudents] = useState([]);
@@ -57,8 +58,17 @@ export default function StaffStudentsPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Students</h1>
-          <p className="page-subtitle">Look up what a student currently has reserved or on loan.</p>
+          <div className="page-title-row">
+            <h1>Students</h1>
+            <PageHelp>
+              <p>Look up what a student currently has reserved or on loan.</p>
+              <ul>
+                <li>Students with overdue books are listed first.</li>
+                <li>Tap a student to see all their records, including history.</li>
+                <li><strong>Add Staff Account</strong> creates a login for another librarian.</li>
+              </ul>
+            </PageHelp>
+          </div>
         </div>
         <button type="button" className="btn-primary btn-yellow" onClick={() => setShowAddStaff(true)}>
           <UserPlus size={16} strokeWidth={1.75} />

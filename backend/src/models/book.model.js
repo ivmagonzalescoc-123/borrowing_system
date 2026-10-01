@@ -74,9 +74,11 @@ const BookModel = {
     return this.findById(id);
   },
 
-  async countRecords(id) {
-    const [[row]] = await db.query('SELECT COUNT(*) AS count FROM borrow_records WHERE book_id = ?', [id]);
-    return row.count;
+  // Books are never deleted (their borrowing history must stay intact):
+  // archiving hides them from the catalog, restoring brings them back.
+  async findArchived() {
+    const [rows] = await db.query(`${BOOK_SELECT} WHERE b.archived_at IS NOT NULL ORDER BY b.archived_at DESC`);
+    return rows;
   },
 
   async archive(id) {
@@ -84,8 +86,8 @@ const BookModel = {
     await db.query('DELETE FROM book_waitlist WHERE book_id = ?', [id]);
   },
 
-  async remove(id) {
-    await db.query('DELETE FROM books WHERE id = ?', [id]);
+  async restore(id) {
+    await db.query('UPDATE books SET archived_at = NULL WHERE id = ?', [id]);
   },
 
   // Atomic: only succeeds while a copy is on the shelf, so two students

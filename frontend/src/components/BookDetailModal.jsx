@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Bookmark, BookmarkCheck, BellRing, BellOff, CalendarRange, Clock, Pencil, Info } from 'lucide-react';
+import { Archive, ArrowLeft, Bookmark, BookmarkCheck, BellRing, BellOff, CalendarRange, Clock, Pencil, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBookmarks } from '../context/BookmarkContext';
 import { coverColor, coverInitial } from '../utils/bookCover';
@@ -21,6 +21,7 @@ export default function BookDetailModal({
   error,
   readOnly,
   onEdit,
+  onArchive,
   onToggleWaitlist,
   waitlistBusy,
 }) {
@@ -178,6 +179,12 @@ export default function BookDetailModal({
 
           {readOnly && onEdit && (
             <div className="modal-action-row">
+              {onArchive && (
+                <button className="btn-ghost" onClick={() => onArchive(book)}>
+                  <Archive size={16} strokeWidth={1.75} />
+                  Archive
+                </button>
+              )}
               <button className="btn-primary btn-yellow" onClick={() => onEdit(book)}>
                 <Pencil size={16} strokeWidth={1.75} />
                 Edit Book

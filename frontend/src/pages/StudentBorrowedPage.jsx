@@ -12,6 +12,7 @@ import useMyBorrows from '../hooks/useMyBorrows';
 import useUrlParam from '../hooks/useUrlParam';
 import { addDays, isOverdue } from '../utils/records';
 import { formatDate } from '../utils/dateFormat';
+import PageHelp from '../components/PageHelp';
 
 export default function StudentBorrowedPage() {
   const { records, policy, loading, loadError, reload } = useMyBorrows();
@@ -49,8 +50,17 @@ export default function StudentBorrowedPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Borrowed Books</h1>
-          <p className="page-subtitle">Return books to the library desk on or before their due date.</p>
+          <div className="page-title-row">
+            <h1>Borrowed Books</h1>
+            <PageHelp>
+              <p>Return books to the library desk on or before their due date.</p>
+              <ul>
+                <li>Need more time? Tap <strong>Renew</strong> (not available once a book is overdue or if others are waiting for it).</li>
+                <li>While a book is overdue, you can&apos;t reserve other books.</li>
+                <li>The <strong>History</strong> tab lists books you&apos;ve returned.</li>
+              </ul>
+            </PageHelp>
+          </div>
         </div>
       </div>
 
@@ -118,6 +128,7 @@ export default function StudentBorrowedPage() {
             policy.maxRenewals === 1 ? 'once' : `${policy.maxRenewals} times`
           }.`}
           confirmLabel="Renew"
+          tone="warning"
           submitting={renewing}
           onConfirm={handleRenew}
           onClose={() => setRenewTarget(null)}

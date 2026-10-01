@@ -11,6 +11,7 @@ import { EmptyState, ErrorState } from '../components/DataState';
 import useMyBorrows from '../hooks/useMyBorrows';
 import useReserveFlow from '../hooks/useReserveFlow';
 import { PAGE_SIZE, categoriesOf, filterBooks, sortBooks } from '../utils/catalog';
+import PageHelp from '../components/PageHelp';
 
 export default function StudentCatalogPage() {
   const [books, setBooks] = useState([]);
@@ -73,8 +74,18 @@ export default function StudentCatalogPage() {
     <div className="page catalog-page">
       <div className="page-header">
         <div>
-          <h1>Book References Catalog</h1>
-          <p className="page-subtitle">Find a reference book, reserve it, and pick it up at the library desk.</p>
+          <div className="page-title-row">
+            <h1>Book References Catalog</h1>
+            <PageHelp>
+              <p>Find a reference book, reserve it, and pick it up at the library desk.</p>
+              <ul>
+                <li>Search by title, author, or ISBN. Use the filter button to pick a category or change the sort.</li>
+                <li>Tap a book, then <strong>Reserve this Book</strong> and choose your dates.</li>
+                <li>Show your reference number at the desk before the pickup deadline.</li>
+                <li>All copies out? Tap <strong>Notify me when available</strong>.</li>
+              </ul>
+            </PageHelp>
+          </div>
         </div>
       </div>
 

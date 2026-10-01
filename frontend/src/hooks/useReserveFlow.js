@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import api from '../api/axios';
+import { formatDate, formatTime } from '../utils/dateFormat';
+import { useConfirm } from '../context/ConfirmContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useToast } from '../context/ToastContext';
 
@@ -14,6 +16,7 @@ export default function useReserveFlow({ onChanged }) {
   const [formError, setFormError] = useState('');
   const { reload: reloadNotifications } = useNotifications();
   const { showSuccess, showError } = useToast();
+  const confirm = useConfirm();
 
   function openBook(book) {
     setFormError('');
@@ -21,6 +24,20 @@ export default function useReserveFlow({ onChanged }) {
   }
 
   async function submitReservation(payload) {
+    const details = [
+      ['Book', selectedBook?.title],
+      ['Purpose', payload.purpose],
+      ['Borrow', `${formatDate(payload.requestStartDate)} – ${formatDate(payload.requestEndDate)}`],
+    ];
+    if (payload.requestTime) details.push(['Return time', formatTime(payload.requestTime)]);
+    const ok = await confirm({
+      title: 'Reserve this book?',
+      message: "A copy will be held for you. Pick it up at the library desk before the pickup deadline.",
+      details,
+      confirmLabel: 'Reserve',
+    });
+    if (!ok) return;
+
     setSubmitting(true);
     setFormError('');
     try {

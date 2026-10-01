@@ -8,6 +8,7 @@ import { EmptyState, ErrorState } from '../components/DataState';
 import { useBookmarks } from '../context/BookmarkContext';
 import useMyBorrows from '../hooks/useMyBorrows';
 import useReserveFlow from '../hooks/useReserveFlow';
+import PageHelp from '../components/PageHelp';
 
 export default function StudentBookmarksPage() {
   const [books, setBooks] = useState([]);
@@ -47,8 +48,16 @@ export default function StudentBookmarksPage() {
     <div className="page catalog-page">
       <div className="page-header">
         <div>
-          <h1>Bookmarks</h1>
-          <p className="page-subtitle">Books you saved for later.</p>
+          <div className="page-title-row">
+            <h1>Bookmarks</h1>
+            <PageHelp>
+              <p>Books you saved for later.</p>
+              <p>
+                Tap <strong>Bookmark</strong> on any book in the catalog to add it here. Your bookmarks are saved to
+                your account, so they show up on any device.
+              </p>
+            </PageHelp>
+          </div>
         </div>
       </div>
 

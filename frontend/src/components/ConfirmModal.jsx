@@ -1,32 +1,58 @@
-import { AlertTriangle } from 'lucide-react';
 import Modal from './Modal';
 import SparkleSpinner from './SparkleSpinner';
 
+// One plain confirmation look for every action in the app: the question, a
+// short explanation, an optional details box, and Cancel / Confirm side by
+// side. The tone colors the top strip, details border and confirm button:
+//   tone="primary" (green)  — normal actions: add, save, reserve, hand over
+//   tone="warning" (yellow) — reversible but notable: archive, renew
+//   tone="danger"  (red)    — can't be undone: decline, cancel
 export default function ConfirmModal({
   title,
   message,
+  details,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
+  tone: toneProp,
   danger = false,
   submitting,
   onConfirm,
   onClose,
 }) {
-  return (
-    <Modal onClose={onClose} label={title}>
-      <AlertTriangle className={`confirm-modal-icon${danger ? ' is-danger' : ''}`} size={36} strokeWidth={1.5} />
-      <h4 className="section-title confirm-modal-title">{title}</h4>
-      <p className="modal-subtitle confirm-modal-message">{message}</p>
+  const tone = toneProp || (danger ? 'danger' : 'primary');
 
-      <div className="confirm-modal-actions">
-        <button type="button" className="btn-ghost" onClick={onClose} disabled={submitting}>
+  return (
+    <Modal onClose={submitting ? () => {} : onClose} className={`confirm-card is-${tone}`} label={title}>
+      <h4 className="confirm-title">{title}</h4>
+      {message && <p className="confirm-message">{message}</p>}
+      {details && (
+        <div className="confirm-details">
+          {/* `details` is either JSX or a list of [label, value] pairs. */}
+          {Array.isArray(details) ? (
+            <dl>
+              {details.map(([label, value]) => (
+                <div key={label} className="confirm-detail-row">
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : (
+            details
+          )}
+        </div>
+      )}
+
+      <div className="confirm-actions">
+        <button type="button" className="btn-ghost" onClick={onClose} disabled={submitting} autoFocus={tone === 'danger'}>
           {cancelLabel}
         </button>
         <button
           type="button"
-          className={`${danger ? 'btn-danger' : 'btn-primary'}${submitting ? ' is-loading' : ''}`}
+          className={`confirm-button${submitting ? ' is-loading' : ''}`}
           onClick={onConfirm}
           disabled={submitting}
+          autoFocus={tone !== 'danger'}
         >
           {submitting ? <SparkleSpinner size={16} /> : confirmLabel}
         </button>

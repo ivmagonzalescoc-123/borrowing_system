@@ -1,8 +1,8 @@
-import { Trash2 } from 'lucide-react';
+import { Archive } from 'lucide-react';
 import { coverColor, coverInitial } from '../utils/bookCover';
 import SparkleSpinner from './SparkleSpinner';
 
-export default function BookCatalogCard({ book, onOpen, onDelete, deleting, showCopiesOut = false }) {
+export default function BookCatalogCard({ book, onOpen, onArchive, archiving, showCopiesOut = false }) {
   const isAvailable = book.available_copies > 0;
   const copiesOut = Number(book.borrowed_count || 0) + Number(book.reserved_count || 0);
 
@@ -23,17 +23,18 @@ export default function BookCatalogCard({ book, onOpen, onDelete, deleting, show
       tabIndex={0}
       aria-label={`${book.title} by ${book.author}`}
     >
-      {onDelete && (
+      {onArchive && (
         <button
-          className={`catalog-card-delete${deleting ? ' is-loading' : ''}`}
-          aria-label={`Delete ${book.title}`}
-          disabled={deleting}
+          className={`catalog-card-archive${archiving ? ' is-loading' : ''}`}
+          aria-label={`Archive ${book.title}`}
+          title="Move to archive"
+          disabled={archiving}
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(book);
+            onArchive(book);
           }}
         >
-          {deleting ? <SparkleSpinner size={14} /> : <Trash2 size={14} strokeWidth={1.75} />}
+          {archiving ? <SparkleSpinner size={14} /> : <Archive size={14} strokeWidth={1.75} />}
         </button>
       )}
       <div className="catalog-card-cover" style={book.cover_url ? undefined : { background: coverColor(book.title) }}>

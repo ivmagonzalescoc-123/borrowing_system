@@ -82,8 +82,11 @@ how it works or run things separately.
 - **Dashboard**: desk lookup (search by reference no., student, or book),
   counts for awaiting pickup / on loan / overdue / due today, a "Needs
   attention" list, and recent activity.
-- **Book References Catalog**: add, edit and remove books. Cards show how
-  many copies are on loan or reserved.
+- **Book References Catalog**: add and edit books, and archive books
+  instead of deleting them (**Archived** next to **Add Book** lists them,
+  with **Restore**). Cards show how many copies are on loan or reserved.
+  Every action (add, save, archive, hand over, decline, return, ...) asks
+  for confirmation first.
 - **Reservations**: searchable list sorted by pickup deadline. **Hand Over**
   (confirm the reference number and set the due date) or **Decline** (with
   a reason that is sent to the student).
@@ -215,7 +218,9 @@ Health check for the backend: `GET http://localhost:5000/api/health`
 | GET    | /api/books                | authenticated | List books (archived books hidden), with copies reserved/on loan and a `waitlisted` flag for the caller |
 | POST   | /api/books                | staff         | Add a book |
 | PUT    | /api/books/:id            | staff         | Update a book. Total copies can't go below copies currently out |
-| DELETE | /api/books/:id            | staff         | Remove a book: refused while copies are out; archived (history kept) if it was ever borrowed |
+| PATCH  | /api/books/:id/archive    | staff         | Archive a book (hidden from the catalog, history kept). Refused while copies are out. Books are never deleted |
+| PATCH  | /api/books/:id/restore    | staff         | Restore an archived book to the catalog |
+| GET    | /api/books/archived       | staff         | List archived books |
 | GET    | /api/books/bookmarks      | student       | My bookmarked book IDs |
 | PUT/DELETE | /api/books/:id/bookmark | student     | Bookmark / un-bookmark |
 | PUT/DELETE | /api/books/:id/waitlist | student     | Join / leave a book's waitlist |

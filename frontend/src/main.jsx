@@ -7,19 +7,22 @@ import { AuthProvider } from './context/AuthContext.jsx'
 import { NotificationProvider } from './context/NotificationContext.jsx'
 import { BookmarkProvider } from './context/BookmarkContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import { ConfirmProvider } from './context/ConfirmContext.jsx'
 import AppToast from './components/AppToast.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <ToastProvider>
-        <AuthProvider>
-          <NotificationProvider>
-            <BookmarkProvider>
-              <App />
-            </BookmarkProvider>
-          </NotificationProvider>
-        </AuthProvider>
+        <ConfirmProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <BookmarkProvider>
+                <App />
+              </BookmarkProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </ConfirmProvider>
         <AppToast />
       </ToastProvider>
     </BrowserRouter>

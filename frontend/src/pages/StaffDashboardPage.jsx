@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import useAllBorrows from '../hooks/useAllBorrows';
 import { formatDate, formatDateTime } from '../utils/dateFormat';
 import { dueText, isOverdue, matchesRecordQuery, todayString } from '../utils/records';
+import PageHelp from '../components/PageHelp';
 
 // The most recent thing that happened to a record, for the activity feed.
 function latestEvent(record) {
@@ -84,9 +85,21 @@ export default function StaffDashboardPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>
-            {greeting()}, {user.full_name.split(' ')[0]}
-          </h1>
+          <div className="page-title-row">
+            <h1>
+              {greeting()}, {user.full_name.split(' ')[0]}
+            </h1>
+            <PageHelp>
+              <ul>
+                <li>
+                  <strong>Desk lookup:</strong> type a reference no., student name or ID, or book title to jump
+                  straight to the record.
+                </li>
+                <li>The cards show what&apos;s waiting for pickup, on loan, overdue, and due today. Tap one to open it.</li>
+                <li><strong>Needs attention</strong> lists overdue books and pickups closing today.</li>
+              </ul>
+            </PageHelp>
+          </div>
           <p className="page-subtitle">
             {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </p>

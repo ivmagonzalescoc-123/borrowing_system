@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Archive, Plus } from 'lucide-react';
 import api from '../api/axios';
 import BookCatalogCard from '../components/BookCatalogCard';
 import BookDetailModal from '../components/BookDetailModal';
 import AddBookModal from '../components/AddBookModal';
 import BookSearchBar from '../components/BookSearchBar';
 import CatalogSkeleton from '../components/CatalogSkeleton';
-import ConfirmModal from '../components/ConfirmModal';
+import ArchivedBooksModal from '../components/ArchivedBooksModal';
 import { EmptyState, ErrorState } from '../components/DataState';
+import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
 import { PAGE_SIZE, categoriesOf, filterBooks, sortBooks } from '../utils/catalog';
+import PageHelp from '../components/PageHelp';
 
 export default function StaffCatalogPage() {
   const [books, setBooks] = useState([]);
@@ -22,11 +24,12 @@ export default function StaffCatalogPage() {
   const [editingBook, setEditingBook] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
-  const [deletingId, setDeletingId] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [archivingId, setArchivingId] = useState(null);
+  const [showArchived, setShowArchived] = useState(false);
   const [sort, setSort] = useState('title');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const { showSuccess, showError } = useToast();
+  const confirm = useConfirm();
 
   async function loadBooks() {
     try {
@@ -54,7 +57,22 @@ export default function StaffCatalogPage() {
     setVisibleCount(PAGE_SIZE);
   }, [query, category, sort]);
 
+  function bookDetails(payload) {
+    return [
+      ['Title', payload.title],
+      ['Author', payload.author],
+      ['Copies', payload.totalCopies],
+    ];
+  }
+
   async function handleAddBook(payload) {
+    const ok = await confirm({
+      title: 'Add this book to the catalog?',
+      message: 'Students will be able to see and reserve it right away.',
+      details: bookDetails(payload),
+      confirmLabel: 'Add book',
+    });
+    if (!ok) return;
     setSubmitting(true);
     setFormError('');
     try {
@@ -72,6 +90,12 @@ export default function StaffCatalogPage() {
   }
 
   async function handleUpdateBook(payload) {
+    const ok = await confirm({
+      title: 'Save changes to this book?',
+      details: bookDetails(payload),
+      confirmLabel: 'Save changes',
+    });
+    if (!ok) return;
     setSubmitting(true);
     setFormError('');
     try {
@@ -94,18 +118,45 @@ export default function StaffCatalogPage() {
     setEditingBook(book);
   }
 
-  async function handleDeleteBook(book) {
-    setDeletingId(book.id);
+  // Books are never deleted — archiving hides one from the catalog and keeps
+  // its history; it can be restored from "Archived".
+  async function handleArchiveBook(book) {
+    const copiesOut = Number(book.reserved_count) + Number(book.borrowed_count);
+    if (copiesOut > 0) {
+      await confirm({
+        title: "Can't archive this book yet",
+        message: `${copiesOut} ${copiesOut === 1 ? 'copy is' : 'copies are'} still reserved or on loan. Resolve ${
+          copiesOut === 1 ? 'it' : 'them'
+        } first, then archive the book.`,
+        confirmLabel: 'OK',
+        cancelLabel: 'Close',
+        tone: 'warning',
+      });
+      return;
+    }
+
+    const ok = await confirm({
+      title: 'Move this book to the archive?',
+      message: 'It will be hidden from the catalog. Its borrowing history is kept, and you can restore it anytime from Archived.',
+      details: [
+        ['Book', book.title],
+        ['Author', book.author],
+      ],
+      confirmLabel: 'Archive book',
+      tone: 'warning',
+    });
+    if (!ok) return;
+
+    setArchivingId(book.id);
     try {
-      const res = await api.delete(`/books/${book.id}`);
-      showSuccess(res.data?.message || 'Book removed');
-      setDeleteTarget(null);
+      await api.patch(`/books/${book.id}/archive`);
+      showSuccess(`"${book.title}" moved to the archive`);
+      setSelectedBook(null);
       loadBooks();
     } catch (err) {
-      showError(err.response?.data?.message || 'Failed to delete book', 4000);
-      setDeleteTarget(null);
+      showError(err.response?.data?.message || 'Failed to archive book', 4000);
     } finally {
-      setDeletingId(null);
+      setArchivingId(null);
     }
   }
 
@@ -113,15 +164,33 @@ export default function StaffCatalogPage() {
     <div className="page catalog-page">
       <div className="page-header">
         <div>
-          <h1>Book References Catalog</h1>
+          <div className="page-title-row">
+            <h1>Book References Catalog</h1>
+            <PageHelp>
+              <ul>
+                <li><strong>Add Book</strong> to put a new title in the catalog.</li>
+                <li>Tap a book to see its details, then <strong>Edit Book</strong> to change it.</li>
+                <li>
+                  The archive icon hides a book from the catalog. Nothing is ever deleted: its history is kept, and
+                  you can bring it back from <strong>Archived</strong>.
+                </li>
+              </ul>
+            </PageHelp>
+          </div>
           <p className="page-subtitle">
             {books.length} titles · {books.reduce((n, b) => n + b.total_copies, 0)} copies
           </p>
         </div>
-        <button className="btn-primary btn-yellow" onClick={() => setShowAddModal(true)}>
-          <Plus size={16} strokeWidth={1.75} />
-          Add Book
-        </button>
+        <div className="page-header-actions">
+          <button type="button" className="btn-header-ghost" onClick={() => setShowArchived(true)}>
+            <Archive size={16} strokeWidth={1.75} />
+            Archived
+          </button>
+          <button type="button" className="btn-primary btn-yellow" onClick={() => setShowAddModal(true)}>
+            <Plus size={16} strokeWidth={1.75} />
+            Add Book
+          </button>
+        </div>
       </div>
 
       <BookSearchBar
@@ -147,8 +216,8 @@ export default function StaffCatalogPage() {
                   key={book.id}
                   book={book}
                   onOpen={setSelectedBook}
-                  onDelete={setDeleteTarget}
-                  deleting={deletingId === book.id}
+                  onArchive={handleArchiveBook}
+                  archiving={archivingId === book.id}
                   showCopiesOut
                 />
               ))}
@@ -168,33 +237,14 @@ export default function StaffCatalogPage() {
         )}
       </div>
 
-      {deleteTarget &&
-        (Number(deleteTarget.reserved_count) + Number(deleteTarget.borrowed_count) > 0 ? (
-          <ConfirmModal
-            title="Can't remove this book yet"
-            message={`"${deleteTarget.title}" still has copies reserved or on loan. Resolve those first.`}
-            confirmLabel="OK"
-            cancelLabel="Close"
-            onConfirm={() => setDeleteTarget(null)}
-            onClose={() => setDeleteTarget(null)}
-          />
-        ) : (
-          <ConfirmModal
-            title="Remove this book?"
-            message={`"${deleteTarget.title}" will be removed from the catalog. If it has borrowing history, it's archived so past records are kept.`}
-            confirmLabel="Remove book"
-            danger
-            submitting={deletingId === deleteTarget.id}
-            onConfirm={() => handleDeleteBook(deleteTarget)}
-            onClose={() => setDeleteTarget(null)}
-          />
-        ))}
+      {showArchived && <ArchivedBooksModal onClose={() => setShowArchived(false)} onRestored={loadBooks} />}
 
       {selectedBook && (
         <BookDetailModal
           book={selectedBook}
           onClose={() => setSelectedBook(null)}
           onEdit={handleEditBook}
+          onArchive={handleArchiveBook}
           readOnly
         />
       )}

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useConfirm } from '../context/ConfirmContext';
 
 function getInitials(name) {
   if (!name) return '?';
@@ -17,6 +18,7 @@ export default function ProfileMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
+  const confirm = useConfirm();
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -26,7 +28,14 @@ export default function ProfileMenu() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  function handleLogout() {
+  async function handleLogout() {
+    setOpen(false);
+    const ok = await confirm({
+      title: 'Log out?',
+      message: 'You will need to sign in again to use the library system.',
+      confirmLabel: 'Log out',
+    });
+    if (!ok) return;
     logout();
     navigate('/login');
   }

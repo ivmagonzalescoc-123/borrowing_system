@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import useMyBorrows from '../hooks/useMyBorrows';
 import { formatDate } from '../utils/dateFormat';
 import { dueText, isOverdue, pickupText } from '../utils/records';
+import PageHelp from '../components/PageHelp';
 
 function greeting() {
   const hour = new Date().getHours();
@@ -34,10 +35,20 @@ export default function StudentDashboardPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>
-            {greeting()}, {user.full_name.split(' ')[0]}
-          </h1>
-          <p className="page-subtitle">Here&apos;s what you have from the library.</p>
+          <div className="page-title-row">
+            <h1>
+              {greeting()}, {user.full_name.split(' ')[0]}
+            </h1>
+            <PageHelp>
+              <p>Your library at a glance:</p>
+              <ul>
+                <li>Books you have on loan and when they&apos;re due.</li>
+                <li>Reservations waiting for you at the library desk.</li>
+                <li>How many of your borrowing slots are in use.</li>
+              </ul>
+              <p>Tap any card or list to see the details.</p>
+            </PageHelp>
+          </div>
         </div>
         <Link to="/student/catalog" className="btn-primary btn-yellow">
           <Library size={16} strokeWidth={1.75} />

@@ -34,7 +34,7 @@ async function ensureIsbnFree(isbn, exceptId) {
   const existing = await BookModel.findByIsbn(isbn);
   if (!existing || existing.id === Number(exceptId)) return null;
   return existing.archived_at
-    ? 'This ISBN belongs to an archived book. Use a different ISBN.'
+    ? `This ISBN belongs to an archived book ("${existing.title}"). Restore it from Archived books instead.`
     : `A book with this ISBN already exists ("${existing.title}").`;
 }
 
@@ -119,27 +119,45 @@ async function uploadCover(req, res, next) {
   }
 }
 
-// Books with borrowing history are archived (hidden from the catalog) rather
-// than deleted, so past records stay intact. Books with copies out can't be
-// removed at all until they're back.
-async function deleteBook(req, res, next) {
+// Books are never deleted, only archived: hidden from the catalog with all
+// their borrowing history kept, and restorable at any time. A book with
+// copies reserved or on loan can't be archived until they're resolved.
+async function archiveBook(req, res, next) {
   try {
     const existing = await BookModel.findById(req.params.id);
-    if (!existing || existing.archived_at) return res.status(404).json({ message: 'Book not found' });
+    if (!existing) return res.status(404).json({ message: 'Book not found' });
+    if (existing.archived_at) return res.status(400).json({ message: 'This book is already archived' });
 
     const active = await BorrowModel.countActiveByBook(existing.id);
     if (active > 0) {
       return res.status(409).json({
-        message: `"${existing.title}" has ${active} active ${active === 1 ? 'reservation or loan' : 'reservations or loans'}. Resolve ${active === 1 ? 'it' : 'them'} before removing the book.`,
+        message: `"${existing.title}" has ${active} active ${active === 1 ? 'reservation or loan' : 'reservations or loans'}. Resolve ${active === 1 ? 'it' : 'them'} before archiving the book.`,
       });
     }
 
-    if ((await BookModel.countRecords(existing.id)) > 0) {
-      await BookModel.archive(existing.id);
-      return res.json({ archived: true, message: 'Book archived — its borrowing history was kept' });
-    }
-    await BookModel.remove(existing.id);
-    res.json({ archived: false, message: 'Book deleted' });
+    await BookModel.archive(existing.id);
+    res.json({ book: await BookModel.findById(existing.id), message: 'Book archived' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function restoreBook(req, res, next) {
+  try {
+    const existing = await BookModel.findById(req.params.id);
+    if (!existing) return res.status(404).json({ message: 'Book not found' });
+    if (!existing.archived_at) return res.status(400).json({ message: 'This book is not archived' });
+
+    await BookModel.restore(existing.id);
+    res.json({ book: await BookModel.findById(existing.id), message: 'Book restored to the catalog' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getArchivedBooks(req, res, next) {
+  try {
+    res.json({ books: await BookModel.findArchived() });
   } catch (err) {
     next(err);
   }
@@ -201,7 +219,9 @@ module.exports = {
   getBook,
   createBook,
   updateBook,
-  deleteBook,
+  archiveBook,
+  restoreBook,
+  getArchivedBooks,
   uploadCover,
   joinWaitlist,
   leaveWaitlist,

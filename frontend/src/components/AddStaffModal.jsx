@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import api from '../api/axios';
+import { useConfirm } from '../context/ConfirmContext';
 import Modal from './Modal';
 import SparkleSpinner from './SparkleSpinner';
 
@@ -9,6 +10,7 @@ export default function AddStaffModal({ onClose, onCreated }) {
   const [form, setForm] = useState({ idNumber: '', fullName: '', email: '', password: '', department: 'Library' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const confirm = useConfirm();
 
   function update(field) {
     return (e) => setForm({ ...form, [field]: e.target.value });
@@ -17,6 +19,18 @@ export default function AddStaffModal({ onClose, onCreated }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    const ok = await confirm({
+      title: 'Create this staff account?',
+      message: 'This person will be able to hand over books, decline reservations, and manage the catalog.',
+      details: [
+        ['Name', form.fullName],
+        ['Email', form.email],
+        ['Staff ID', form.idNumber],
+      ],
+      confirmLabel: 'Create account',
+      tone: 'warning',
+    });
+    if (!ok) return;
     setSubmitting(true);
     try {
       const res = await api.post('/auth/staff', form);

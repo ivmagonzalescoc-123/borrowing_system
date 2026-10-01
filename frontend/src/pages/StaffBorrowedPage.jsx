@@ -14,6 +14,7 @@ import useAllBorrows from '../hooks/useAllBorrows';
 import useUrlParam from '../hooks/useUrlParam';
 import { downloadCsv } from '../utils/csv';
 import { daysBetween, isOverdue, matchesRecordQuery, statusMeta, todayString } from '../utils/records';
+import PageHelp from '../components/PageHelp';
 
 const TABS = ['active', 'overdue', 'returned'];
 
@@ -84,7 +85,18 @@ export default function StaffBorrowedPage() {
     <div className="page">
       <div className="page-header">
         <div>
-          <h1>Borrowed Books</h1>
+          <div className="page-title-row">
+            <h1>Borrowed Books</h1>
+            <PageHelp>
+              <ul>
+                <li>Tap <strong>Mark Returned</strong> when a book is back at the desk.</li>
+                <li>
+                  The <strong>Overdue</strong> tab lists late books. Students and staff are notified automatically.
+                </li>
+                <li><strong>Export CSV</strong> downloads the current tab for reports.</li>
+              </ul>
+            </PageHelp>
+          </div>
           <p className="page-subtitle">
             {active.length} on loan{overdue.length > 0 && ` · ${overdue.length} overdue`}
           </p>
@@ -159,8 +171,13 @@ export default function StaffBorrowedPage() {
 
       {confirmRecord && (
         <ConfirmModal
-          title="Mark Book as Returned?"
-          message={`Confirm that "${confirmRecord.book_title}" borrowed by ${confirmRecord.student_name} has been returned. This cannot be undone.`}
+          title="Mark this book as returned?"
+          message="Only confirm once the book is physically back at the desk. This cannot be undone."
+          details={[
+            ['Book', confirmRecord.book_title],
+            ['Student', `${confirmRecord.student_name} (${confirmRecord.student_id_number})`],
+            ['Ref No.', confirmRecord.reference_no],
+          ]}
           confirmLabel="Mark Returned"
           submitting={returningId === confirmRecord.id}
           onConfirm={() => handleMarkReturned(confirmRecord.id)}
