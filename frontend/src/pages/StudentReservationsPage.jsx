@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { LayoutGrid } from 'lucide-react';
 import api from '../api/axios';
 import BorrowRecordRow from '../components/BorrowRecordRow';
 import RecordListSkeleton from '../components/RecordListSkeleton';
@@ -81,12 +82,15 @@ export default function StudentReservationsPage() {
             ))}
             {shown.length === 0 &&
               (tab === 'pending' ? (
-                <div className="state-message">
-                  <p>You have no reservations waiting for pickup.</p>
-                  <Link to="/student" className="btn-primary">
-                    Browse the catalog
-                  </Link>
-                </div>
+                <EmptyState
+                  message="You have no reservations waiting for pickup."
+                  action={
+                    <Link to="/student" className="btn-primary">
+                      <LayoutGrid size={16} strokeWidth={1.75} />
+                      Browse the catalog
+                    </Link>
+                  }
+                />
               ) : (
                 <EmptyState message="No cancelled, declined, or expired reservations." />
               ))}

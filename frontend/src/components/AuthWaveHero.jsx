@@ -9,8 +9,11 @@ export default function AuthWaveHero() {
         alt=""
         aria-hidden="true"
       />
-      <Sparkle className="auth-hero-sparkle" aria-hidden="true" />
+      <Sparkle className="auth-hero-sparkle auth-hero-sparkle-outer" aria-hidden="true" />
       <div className="auth-hero">
+        {/* Mobile/tablet-portrait copy: inside .auth-hero so it can sit
+            behind the brand text instead of on top of it. */}
+        <Sparkle className="auth-hero-sparkle auth-hero-sparkle-inline" aria-hidden="true" />
         <div className="auth-hero-brand">
           <span className="auth-hero-title">
             Phinma Cagayan de Oro College

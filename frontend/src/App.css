@@ -696,6 +696,33 @@ button.is-loading:disabled {
   pointer-events: none;
 }
 
+.auth-hero-sparkle-inline {
+  display: none;
+}
+
+/* Mobile/tablet-portrait: the brand text wraps far enough right to reach
+   the star. The outer star sits above all of .auth-hero (text included), so
+   swap in the copy inside .auth-hero, layered between the green background
+   and the text (z-index 1 < .auth-hero-brand's 2). Same spot on screen:
+   .auth-hero starts at the top and spans the full width, so 14vh / 62%
+   match the outer star's 14% / 62% of the full-height page. Also cap the
+   brand's width so "Prototype" wraps before running onto the white curve. */
+@media (max-width: 860px) {
+  .auth-hero-sparkle-outer {
+    display: none;
+  }
+
+  .auth-hero-sparkle-inline {
+    display: block;
+    top: 14vh;
+    z-index: 1;
+  }
+
+  .auth-hero-brand {
+    max-width: 80%;
+  }
+}
+
 .auth-hero {
   position: absolute;
   top: 0;
@@ -2025,6 +2052,25 @@ button.is-loading:disabled {
   justify-content: center;
   padding: 6rem 1rem;
   color: white;
+}
+
+/* Links styled as buttons get the same shape as <button> (padding, radius,
+   font) — the base `button` rule doesn't apply to <a>. */
+a.btn-primary,
+a.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 1.05rem;
+  font-size: 0.87rem;
+  font-weight: 500;
+  transition: background 0.15s ease;
+}
+
+.state-action {
+  margin-top: 0.4rem;
 }
 
 /* Buttons */
