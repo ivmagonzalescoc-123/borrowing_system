@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LayoutGrid } from 'lucide-react';
+import { Library } from 'lucide-react';
 import api from '../api/axios';
 import BorrowRecordRow from '../components/BorrowRecordRow';
 import RecordListSkeleton from '../components/RecordListSkeleton';
@@ -85,8 +85,8 @@ export default function StudentReservationsPage() {
                 <EmptyState
                   message="You have no reservations waiting for pickup."
                   action={
-                    <Link to="/student" className="btn-primary">
-                      <LayoutGrid size={16} strokeWidth={1.75} />
+                    <Link to="/student/catalog" className="btn-primary">
+                      <Library size={16} strokeWidth={1.75} />
                       Browse the catalog
                     </Link>
                   }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Smartphone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import AuthWaveHero from '../components/AuthWaveHero';
@@ -159,7 +159,16 @@ export default function LoginPage() {
       {showForgotModal && <ForgotPasswordModal onClose={() => setShowForgotModal(false)} />}
       {showGoogleModal && <GoogleLoginModal onClose={() => setShowGoogleModal(false)} />}
 
-      <p className="auth-copyright">&copy; Group4 Cabahug-Gonzales-Sabellina-Sale</p>
+      <div className="auth-copyright">
+        <p className="auth-mobile-note">
+          <Smartphone size={13} strokeWidth={1.75} aria-hidden="true" />
+          compatible
+        </p>
+        <p>
+          &copy; 2026 Group 4 — Cabahug, Gonzales, Sabellina, Sale.{' '}
+          <span className="nowrap">All rights reserved.</span>
+        </p>
+      </div>
     </div>
   );
 }

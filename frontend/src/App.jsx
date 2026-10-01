@@ -8,6 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PageLoader from './components/PageLoader';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import StudentDashboardPage from './pages/StudentDashboardPage';
 import StudentCatalogPage from './pages/StudentCatalogPage';
 import StudentReservationsPage from './pages/StudentReservationsPage';
 import StudentBorrowedPage from './pages/StudentBorrowedPage';
@@ -53,6 +54,14 @@ export default function App() {
             <Route path="/" element={<HomeRedirect />} />
             <Route
               path="/student"
+              element={
+                <ProtectedRoute roles={['student']}>
+                  <StudentDashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/student/catalog"
               element={
                 <ProtectedRoute roles={['student']}>
                   <StudentCatalogPage />

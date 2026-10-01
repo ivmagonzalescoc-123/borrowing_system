@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import api from '../api/axios';
 import BookCatalogCard from '../components/BookCatalogCard';
 import BookDetailModal from '../components/BookDetailModal';
 import ReservationSuccessModal from '../components/ReservationSuccessModal';
 import BookSearchBar from '../components/BookSearchBar';
 import CatalogSkeleton from '../components/CatalogSkeleton';
-import StudentSummary from '../components/StudentSummary';
 import { EmptyState, ErrorState } from '../components/DataState';
 import useMyBorrows from '../hooks/useMyBorrows';
 import useReserveFlow from '../hooks/useReserveFlow';
@@ -46,7 +46,7 @@ export default function StudentCatalogPage() {
     },
   });
 
-  // Deep link from a "book is available again" notification: /student?book=12
+  // Deep link from a "book is available again" notification: /student/catalog?book=12
   const bookParam = searchParams.get('book');
   const { openBook } = reserve;
   useEffect(() => {
@@ -78,7 +78,16 @@ export default function StudentCatalogPage() {
         </div>
       </div>
 
-      {!mine.loading && !mine.loadError && <StudentSummary summary={mine.summary} policy={mine.policy} />}
+      {/* Status cards live on the Dashboard; only the overdue warning stays
+          here, since it's why the Reserve button is disabled. */}
+      {mine.summary.overdue.length > 0 && (
+        <Link to="/student/borrowed" className="alert-banner is-danger catalog-alert">
+          <AlertCircle size={18} strokeWidth={1.75} />
+          <span>
+            <strong>Overdue book.</strong> Return it to the library desk to reserve again.
+          </span>
+        </Link>
+      )}
 
       <BookSearchBar
         query={query}

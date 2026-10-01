@@ -22,7 +22,7 @@ const WaitlistModel = {
     if (rows.length === 0) return;
     await NotificationModel.createForUsers(
       rows.map((row) => row.user_id),
-      { message: `"${book.title}" is available again. Reserve it before someone else does!`, link: `/student?book=${book.id}` },
+      { message: `"${book.title}" is available again. Reserve it before someone else does!`, link: `/student/catalog?book=${book.id}` },
       conn
     );
     await conn.query('DELETE FROM book_waitlist WHERE book_id = ?', [book.id]);

@@ -61,9 +61,11 @@ how it works or run things separately.
 
 **Student portal**
 
-- **Book References Catalog**: a "My status" strip (books on loan, awaiting
-  pickup, next due date, borrowing slots used) above a searchable,
-  sortable book grid. Opening a book shows its details with **Bookmark** and
+- **Dashboard** (home after login): status cards (books on loan, awaiting
+  pickup, next due date, borrowing slots used), plus short lists of current
+  loans and pickups.
+- **Book References Catalog**: a searchable, sortable book grid (two
+  columns on phones). Opening a book shows its details with **Bookmark** and
   **Reserve** buttons. If the student can't reserve (overdue book, limit
   reached, already reserved), the reason is shown up front. When every copy
   is out, **Notify me when available** puts them on the book's waitlist.
